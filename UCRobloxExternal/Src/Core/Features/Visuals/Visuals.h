@@ -22,6 +22,7 @@ namespace Visuals {
         if (!Vars::ESP::enabled) return;
 
         ImU32 boxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
+        ImU32 boxFillCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxFillColor[0], Vars::ESP::boxFillColor[1], Vars::ESP::boxFillColor[2], Vars::ESP::boxFillColor[3]));
         ImU32 skelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
         ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
 
@@ -302,6 +303,11 @@ namespace Visuals {
 
             if (boxWidth > MAX_BOX_WIDTH || boxHeight > MAX_BOX_HEIGHT) continue;
 
+            // [NEW] Box Fill Rendered Below Box Outline
+            if (Vars::ESP::boxes && Vars::ESP::boxFill) {
+                drawList->AddRectFilled(ImVec2(minX, minY), ImVec2(maxX, maxY), boxFillCol);
+            }
+
             if (Vars::ESP::boxes) {
                 if (Vars::ESP::boxStyle == 0) {
                     drawList->AddRect(ImVec2(minX - 1, minY - 1), ImVec2(maxX + 1, maxY + 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
@@ -329,7 +335,6 @@ namespace Visuals {
                 }
             }
 
-            // SKELETON
             if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
                 RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
                 RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
@@ -355,6 +360,13 @@ namespace Visuals {
 
                 drawList->AddRectFilled(ImVec2(minX - 6, minY - 1), ImVec2(minX - 2, maxY + 1), IM_COL32(0, 0, 0, 255));
                 drawList->AddRectFilled(ImVec2(minX - 5, maxY - barHeight), ImVec2(minX - 3, maxY), healthColor);
+
+                // [NEW] Health Text Output
+                if (Vars::ESP::healthText) {
+                    std::string hpStr = std::to_string(static_cast<int>(plr.health)) + " HP";
+                    ImVec2 hpSize = ImGui::CalcTextSize(hpStr.c_str());
+                    DrawOutlinedText(drawList, ImVec2(minX - 8 - hpSize.x, maxY - barHeight - 4), hpStr, IM_COL32(255, 255, 255, 255));
+                }
             }
 
             if (Vars::ESP::names) {
@@ -364,12 +376,20 @@ namespace Visuals {
                 DrawOutlinedText(drawList, ImVec2(textX, textY), plr.name, IM_COL32(255, 255, 255, 255));
             }
 
+            float bottomTextOffset = 2.0f;
             if (Vars::ESP::distance) {
                 std::string distText = std::to_string(static_cast<int>(plr.distance)) + "m";
                 ImVec2 textSize = ImGui::CalcTextSize(distText.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
-                float textY = maxY + 2;
-                DrawOutlinedText(drawList, ImVec2(textX, textY), distText, IM_COL32(200, 200, 200, 255));
+                DrawOutlinedText(drawList, ImVec2(textX, maxY + bottomTextOffset), distText, IM_COL32(200, 200, 200, 255));
+                bottomTextOffset += textSize.y + 2.0f;
+            }
+
+            // [NEW] Weapon ESP
+            if (Vars::ESP::weapon && !plr.equippedTool.empty()) {
+                ImVec2 textSize = ImGui::CalcTextSize(plr.equippedTool.c_str());
+                float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
+                DrawOutlinedText(drawList, ImVec2(textX, maxY + bottomTextOffset), plr.equippedTool, IM_COL32(150, 200, 255, 255));
             }
 
             if (Vars::ESP::snaplines) {

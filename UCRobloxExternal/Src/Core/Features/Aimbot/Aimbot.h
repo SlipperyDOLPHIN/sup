@@ -54,7 +54,7 @@ namespace Aimbot {
         RBX::Vec2 aimCenter = { static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) };
 
         if (lockedPlayerAddr == 0) {
-            float closestDist = 999999.0f;
+            float bestScore = 999999.0f; // [NEW] Best score based on Priority
             RBX::Vec2 closestTarget = { 0,0 };
             uintptr_t closestPlayerAddr = 0;
 
@@ -82,12 +82,17 @@ namespace Aimbot {
                 if (screenPos.X == 0 && screenPos.Y == 0) continue;
                 if (screenPos.X < 0 || screenPos.Y < 0 || screenPos.X > screenW || screenPos.Y > screenH) continue;
 
-                float dist = GetDistance2D(aimCenter, screenPos);
+                float dist2D = GetDistance2D(aimCenter, screenPos);
 
-                if (dist < Vars::Aimbot::fovRadius && dist < closestDist) {
-                    closestDist = dist;
-                    closestTarget = screenPos;
-                    closestPlayerAddr = plr.playerAddr;
+                // [NEW] Aimbot Priority Logic
+                if (dist2D < Vars::Aimbot::fovRadius) {
+                    float currentScore = (Vars::Aimbot::aimMethod == 0) ? dist2D : plr.distance;
+
+                    if (currentScore < bestScore) {
+                        bestScore = currentScore;
+                        closestTarget = screenPos;
+                        closestPlayerAddr = plr.playerAddr;
+                    }
                 }
             }
 

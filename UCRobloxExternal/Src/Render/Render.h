@@ -204,7 +204,7 @@ public:
 
         if (!Vars::menuOpen) return;
 
-        ImGui::SetNextWindowSize(ImVec2(650, 500), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(680, 520), ImGuiCond_FirstUseEver);
         ImGui::Begin("Roblox External", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
@@ -279,6 +279,11 @@ public:
             ImGui::SliderFloat("##Smoothing", &Vars::Aimbot::smoothing, 1.0f, 20.0f, "%.1f");
 
             ImGui::Spacing();
+            ImGui::Text("Aim Method (Priority)");
+            const char* methods[] = { "Closest to Crosshair", "Closest Distance" }; // [NEW] Priority Selection
+            ImGui::Combo("##AimMethod", &Vars::Aimbot::aimMethod, methods, 2);
+
+            ImGui::Spacing();
             ImGui::Text("Aim Target");
             const char* targets[] = { "Head", "HumanoidRootPart" };
             ImGui::Combo("##Target", &Vars::Aimbot::aimTarget, targets, 2);
@@ -321,6 +326,11 @@ public:
                 const char* boxStyles[] = { "Full Box", "Corner Box" };
                 ImGui::Combo("##BoxStyle", &Vars::ESP::boxStyle, boxStyles, 2);
                 ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
+
+                ImGui::Checkbox("Box Fill", &Vars::ESP::boxFill); // [NEW] Box Fill Option
+                if (Vars::ESP::boxFill) {
+                    ImGui::ColorEdit4("Fill Color", Vars::ESP::boxFillColor, ImGuiColorEditFlags_NoInputs);
+                }
             }
             ImGui::Spacing();
 
@@ -340,7 +350,13 @@ public:
             ImGui::Spacing();
             ImGui::Checkbox("Names", &Vars::ESP::names);
             ImGui::Checkbox("Distance", &Vars::ESP::distance);
+            ImGui::Checkbox("Weapon", &Vars::ESP::weapon); // [NEW] Weapon Option
+
             ImGui::Checkbox("Health Bar", &Vars::ESP::healthBar);
+            if (Vars::ESP::healthBar) {
+                ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText); // [NEW] Health Text Option
+            }
+
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
             ImGui::Columns(1);
         }
