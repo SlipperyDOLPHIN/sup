@@ -143,7 +143,6 @@ int main() {
             lastTime = currentTime;
         }
 
-        // --- NEW PREMIUM WATERMARK ---
         std::string watermark = "Made by Orange  |  Roblox External  |  FPS: " + std::to_string(fps);
         ImVec2 textSize = ImGui::CalcTextSize(watermark.c_str());
         float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
@@ -153,27 +152,22 @@ int main() {
         ImVec2 boxMin(screenW - textSize.x - (paddingX * 2) - 20, 20);
         ImVec2 boxMax(screenW - 20, 20 + textSize.y + (paddingY * 2));
 
-        // Dark rounded background box
         drawList->AddRectFilled(boxMin, boxMax, IM_COL32(20, 20, 22, 240), 4.0f);
-
-        // Orange inner top accent line
         drawList->AddRectFilled(ImVec2(boxMin.x + 1, boxMin.y + 1), ImVec2(boxMax.x - 1, boxMin.y + 3), IM_COL32(255, 140, 0, 255), 4.0f);
-
-        // Subtle outline border
         drawList->AddRect(boxMin, boxMax, IM_COL32(60, 60, 65, 255), 4.0f);
 
-        // Render the text with drop shadow
         ImVec2 textPos(boxMin.x + paddingX, boxMin.y + paddingY + 2);
-        drawList->AddText(ImVec2(textPos.x + 1, textPos.y + 1), IM_COL32(0, 0, 0, 255), watermark.c_str()); // Drop shadow
-        drawList->AddText(textPos, IM_COL32(240, 240, 240, 255), watermark.c_str()); // Actual text
-        // -----------------------------
+        drawList->AddText(ImVec2(textPos.x + 1, textPos.y + 1), IM_COL32(0, 0, 0, 255), watermark.c_str());
+        drawList->AddText(textPos, IM_COL32(240, 240, 240, 255), watermark.c_str());
 
+        // [UPDATED] FOV Drawing with Color and Thickness
         if (Vars::Aimbot::enabled && Vars::Aimbot::showFOV) {
+            ImU32 fovCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::Aimbot::fovColor[0], Vars::Aimbot::fovColor[1], Vars::Aimbot::fovColor[2], Vars::Aimbot::fovColor[3]));
             POINT p;
             GetCursorPos(&p);
             ImVec2 center = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
-            drawList->AddCircle(center, Vars::Aimbot::fovRadius, IM_COL32(0, 0, 0, 255), 64, 2.0f);
-            drawList->AddCircle(center, Vars::Aimbot::fovRadius, IM_COL32(255, 255, 255, 255), 64, 1.0f);
+            drawList->AddCircle(center, Vars::Aimbot::fovRadius, IM_COL32(0, 0, 0, 255), 64, Vars::Aimbot::fovThickness + 1.5f); // Outline
+            drawList->AddCircle(center, Vars::Aimbot::fovRadius, fovCol, 64, Vars::Aimbot::fovThickness); // Inner
         }
 
         auto viewMatrix = Globals::renderEngine.GetViewMat();

@@ -22,7 +22,6 @@ namespace Visuals {
         if (!Vars::ESP::enabled) return;
 
         ImU32 boxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
-        ImU32 skelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
         ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
 
         for (auto& plr : PlayerCache::players) {
@@ -30,8 +29,9 @@ namespace Visuals {
 
             if (plr.distance > Vars::ESP::maxDistance) continue;
 
-            // [NEW] Team Check
-            if (Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
+            // [NEW] NPC / Team Checks
+            if (plr.isNPC && !Vars::ESP::showNPCs) continue;
+            if (!plr.isNPC && Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
             auto character = RBX::RbxInstance(plr.characterAddr);
 
@@ -96,7 +96,6 @@ namespace Visuals {
                     auto armRight = armCF.GetRightVector();
                     auto armUp = armCF.GetUpVector();
                     auto armLook = armCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -116,7 +115,6 @@ namespace Visuals {
                     auto armRight = armCF.GetRightVector();
                     auto armUp = armCF.GetUpVector();
                     auto armLook = armCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -137,7 +135,6 @@ namespace Visuals {
                     auto legRight = legCF.GetRightVector();
                     auto legUp = legCF.GetUpVector();
                     auto legLook = legCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -157,7 +154,6 @@ namespace Visuals {
                     auto legRight = legCF.GetRightVector();
                     auto legUp = legCF.GetUpVector();
                     auto legLook = legCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -188,7 +184,6 @@ namespace Visuals {
                     auto torsoUp = torsoCF.GetUpVector();
                     auto torsoLook = torsoCF.GetLookVector();
                     const float utW = 1.6f, utH = 1.5f, utD = 0.8f;
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -209,7 +204,6 @@ namespace Visuals {
                     auto handRight = handCF.GetRightVector();
                     auto handUp = handCF.GetUpVector();
                     auto handLook = handCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -229,7 +223,6 @@ namespace Visuals {
                     auto handRight = handCF.GetRightVector();
                     auto handUp = handCF.GetUpVector();
                     auto handLook = handCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -250,7 +243,6 @@ namespace Visuals {
                     auto footRight = footCF.GetRightVector();
                     auto footUp = footCF.GetUpVector();
                     auto footLook = footCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -270,7 +262,6 @@ namespace Visuals {
                     auto footRight = footCF.GetRightVector();
                     auto footUp = footCF.GetUpVector();
                     auto footLook = footCF.GetLookVector();
-
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -312,25 +303,29 @@ namespace Visuals {
             if (boxWidth > MAX_BOX_WIDTH || boxHeight > MAX_BOX_HEIGHT) continue;
 
             if (Vars::ESP::boxes) {
-                drawList->AddRect(ImVec2(minX - 1, minY - 1), ImVec2(maxX + 1, maxY + 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
-                drawList->AddRect(ImVec2(minX + 1, minY + 1), ImVec2(maxX - 1, maxY - 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
-                drawList->AddRect(ImVec2(minX, minY), ImVec2(maxX, maxY), boxCol, 0.0f, 0, 1.0f);
-            }
+                if (Vars::ESP::boxStyle == 0) {
+                    drawList->AddRect(ImVec2(minX - 1, minY - 1), ImVec2(maxX + 1, maxY + 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
+                    drawList->AddRect(ImVec2(minX + 1, minY + 1), ImVec2(maxX - 1, maxY - 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
+                    drawList->AddRect(ImVec2(minX, minY), ImVec2(maxX, maxY), boxCol, 0.0f, 0, 1.0f);
+                }
+                else if (Vars::ESP::boxStyle == 1) {
+                    float lineW = (maxX - minX) / 4.0f;
+                    float lineH = (maxY - minY) / 4.0f;
+                    float t = 1.0f;
 
-            if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
-                RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
-                RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
-                RBX::Vec2 lArm2D = W2S::WorldToScreen(leftArm.GetPos(), viewMatrix);
-                RBX::Vec2 rArm2D = W2S::WorldToScreen(rightArm.GetPos(), viewMatrix);
-                RBX::Vec2 lLeg2D = W2S::WorldToScreen(leftLeg.GetPos(), viewMatrix);
-                RBX::Vec2 rLeg2D = W2S::WorldToScreen(rightLeg.GetPos(), viewMatrix);
+                    auto DrawCorner = [&](ImVec2 p1, ImVec2 p2) {
+                        drawList->AddLine(p1, p2, IM_COL32(0, 0, 0, 255), t + 2.0f);
+                        drawList->AddLine(p1, p2, boxCol, t);
+                        };
 
-                if (head2D.X != 0 && torso2D.X != 0 && lArm2D.X != 0 && rArm2D.X != 0 && lLeg2D.X != 0 && rLeg2D.X != 0) {
-                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), skelCol, 1.5f);
+                    DrawCorner(ImVec2(minX, minY), ImVec2(minX + lineW, minY));
+                    DrawCorner(ImVec2(minX, minY), ImVec2(minX, minY + lineH));
+                    DrawCorner(ImVec2(maxX, minY), ImVec2(maxX - lineW, minY));
+                    DrawCorner(ImVec2(maxX, minY), ImVec2(maxX, minY + lineH));
+                    DrawCorner(ImVec2(minX, maxY), ImVec2(minX + lineW, maxY));
+                    DrawCorner(ImVec2(minX, maxY), ImVec2(minX, maxY - lineH));
+                    DrawCorner(ImVec2(maxX, maxY), ImVec2(maxX - lineW, maxY));
+                    DrawCorner(ImVec2(maxX, maxY), ImVec2(maxX, maxY - lineH));
                 }
             }
 
@@ -360,8 +355,12 @@ namespace Visuals {
             }
 
             if (Vars::ESP::snaplines) {
-                ImVec2 bottomCenter(screenSize.x / 2.0f, screenSize.y);
-                drawList->AddLine(bottomCenter, ImVec2((minX + maxX) / 2.0f, maxY), snapCol, 1.0f);
+                ImVec2 startPos;
+                if (Vars::ESP::snaplinePos == 0) startPos = ImVec2(screenSize.x / 2.0f, screenSize.y);
+                else if (Vars::ESP::snaplinePos == 1) startPos = ImVec2(screenSize.x / 2.0f, screenSize.y / 2.0f);
+                else if (Vars::ESP::snaplinePos == 2) startPos = ImVec2(screenSize.x / 2.0f, 0.0f);
+
+                drawList->AddLine(startPos, ImVec2((minX + maxX) / 2.0f, maxY), snapCol, 1.0f);
             }
         }
 

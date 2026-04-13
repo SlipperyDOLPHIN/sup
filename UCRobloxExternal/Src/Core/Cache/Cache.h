@@ -1,6 +1,7 @@
 #pragma once
 #include "../../Game/SDK/SDK.h"
 #include "../Globals/Globals.h"
+#include "../Vars/Vars.h" // [NEW] Include Vars so the cache knows when to scan for NPCs
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -12,31 +13,30 @@ namespace PlayerCache {
         uintptr_t characterAddr;
         uintptr_t humanoidAddr;
         uintptr_t rootPartAddr;
-        uintptr_t teamAddr; // [NEW] Team Address
+        uintptr_t teamAddr;
 
         std::string name;
         RBX::Vec3 position;
-        float health;       // [FIXED] Roblox health is a float
-        float maxHealth;    // [FIXED] Roblox health is a float
+        float health;
+        float maxHealth;
         float distance;
 
         bool isValid;
+        bool isNPC; // [NEW] Flag to tell Visuals/Aimbot this is a bot
     };
 
     inline std::vector<CachedPlayer> players;
     inline RBX::Vec3 localPlayerPos;
-    inline uintptr_t localPlayerTeam = 0; // [NEW] Store LocalPlayer's Team
+    inline uintptr_t localPlayerTeam = 0;
 
     inline void UpdatePlayers() {
         auto playerList = Globals::players.GetChildList();
 
-        // [NEW] Get LocalPlayer's Team
         localPlayerTeam = Coms->ReadMemory<uintptr_t>(Globals::localPlayer.Addr + offsets::Team);
 
         auto localChar = Globals::localPlayer.GetModelRef();
         if (localChar.Addr == 0) return;
 
-        // [FIXED] Fallback logic so it doesn't break on custom game rigs
         auto localRoot = localChar.FindChild("HumanoidRootPart");
         if (localRoot.Addr == 0) localRoot = localChar.FindChild("Torso");
         if (localRoot.Addr == 0) localRoot = localChar.FindChild("UpperTorso");
@@ -49,12 +49,13 @@ namespace PlayerCache {
             cached.isValid = false;
         }
 
+        // --- REAL PLAYERS ---
         for (auto& plr : playerList) {
             if (plr.Addr == Globals::localPlayer.Addr) continue;
 
             CachedPlayer* existingPlayer = nullptr;
             for (auto& cached : players) {
-                if (cached.playerAddr == plr.Addr) {
+                if (!cached.isNPC && cached.playerAddr == plr.Addr) {
                     existingPlayer = &cached;
                     break;
                 }
@@ -63,12 +64,12 @@ namespace PlayerCache {
             if (existingPlayer == nullptr) {
                 CachedPlayer newPlayer;
                 newPlayer.playerAddr = plr.Addr;
+                newPlayer.isNPC = false;
                 newPlayer.name = plr.GetName();
                 players.push_back(newPlayer);
                 existingPlayer = &players.back();
             }
 
-            // [NEW] Read target player's Team
             existingPlayer->teamAddr = Coms->ReadMemory<uintptr_t>(plr.Addr + offsets::Team);
 
             auto character = plr.GetModelRef();
@@ -81,7 +82,6 @@ namespace PlayerCache {
 
             existingPlayer->humanoidAddr = humanoid.Addr;
 
-            // [FIXED] Fallback logic for missing HumanoidRootPart
             auto rootPart = character.FindChild("HumanoidRootPart");
             if (rootPart.Addr == 0) rootPart = character.FindChild("Torso");
             if (rootPart.Addr == 0) rootPart = character.FindChild("UpperTorso");
@@ -91,12 +91,70 @@ namespace PlayerCache {
             existingPlayer->rootPartAddr = rootPart.Addr;
             existingPlayer->position = rootPart.GetPos();
 
-            // [FIXED] Reading health as float
             existingPlayer->health = Coms->ReadMemory<float>(humanoid.Addr + offsets::Health);
             existingPlayer->maxHealth = Coms->ReadMemory<float>(humanoid.Addr + offsets::MaxHealth);
-
             existingPlayer->distance = rootPart.CalcDistance(localPlayerPos);
             existingPlayer->isValid = true;
+        }
+
+        // --- BOTS / NPCS ---
+        if (Vars::ESP::showNPCs || Vars::Aimbot::targetNPCs) {
+            auto workspaceChildren = Globals::workspace.GetChildList();
+            for (auto& child : workspaceChildren) {
+                // Ignore the LocalPlayer's Character
+                if (child.Addr == localChar.Addr) continue;
+
+                // Ignore if it's already cached as a Real Player's character
+                bool isRealPlayer = false;
+                for (auto& cached : players) {
+                    if (!cached.isNPC && cached.characterAddr == child.Addr) {
+                        isRealPlayer = true;
+                        break;
+                    }
+                }
+                if (isRealPlayer) continue;
+
+                auto humanoid = child.FindChildByClass("Humanoid");
+                if (humanoid.Addr == 0) continue;
+
+                auto rootPart = child.FindChild("HumanoidRootPart");
+                if (rootPart.Addr == 0) rootPart = child.FindChild("Torso");
+                if (rootPart.Addr == 0) rootPart = child.FindChild("UpperTorso");
+                if (rootPart.Addr == 0) rootPart = child.FindChild("Head");
+                if (rootPart.Addr == 0) continue;
+
+                float health = Coms->ReadMemory<float>(humanoid.Addr + offsets::Health);
+                if (health <= 0) continue; // Don't show dead bots
+
+                CachedPlayer* existingNPC = nullptr;
+                for (auto& cached : players) {
+                    // For NPCs, the model address is essentially their unique ID
+                    if (cached.isNPC && cached.playerAddr == child.Addr) {
+                        existingNPC = &cached;
+                        break;
+                    }
+                }
+
+                if (existingNPC == nullptr) {
+                    CachedPlayer newNPC;
+                    newNPC.playerAddr = child.Addr;
+                    newNPC.isNPC = true;
+                    newNPC.name = child.GetName();
+                    if (newNPC.name.empty()) newNPC.name = "Bot/NPC";
+                    players.push_back(newNPC);
+                    existingNPC = &players.back();
+                }
+
+                existingNPC->teamAddr = 0; // Bots don't have teams
+                existingNPC->characterAddr = child.Addr;
+                existingNPC->humanoidAddr = humanoid.Addr;
+                existingNPC->rootPartAddr = rootPart.Addr;
+                existingNPC->position = rootPart.GetPos();
+                existingNPC->health = health;
+                existingNPC->maxHealth = Coms->ReadMemory<float>(humanoid.Addr + offsets::MaxHealth);
+                existingNPC->distance = rootPart.CalcDistance(localPlayerPos);
+                existingNPC->isValid = true;
+            }
         }
 
         players.erase(

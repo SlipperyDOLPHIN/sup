@@ -125,7 +125,6 @@ public:
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = nullptr;
 
-        // Custom Modern Theme
         ImGuiStyle& style = ImGui::GetStyle();
         style.WindowRounding = 6.0f;
         style.ChildRounding = 6.0f;
@@ -179,9 +178,33 @@ public:
     }
 
     void RenderMenu() {
+        if (Vars::showHUD) {
+            ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.11f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+
+            if (ImGui::Begin("Status HUD", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar)) {
+                ImGui::TextColored(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), "Orange External");
+                ImGui::Separator();
+
+                if (Vars::Aimbot::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Aimbot Active");
+                if (Vars::ESP::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] ESP Active");
+                if (Vars::Local::speedEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] WalkSpeed [%.0f]", Vars::Local::walkSpeed);
+                if (Vars::Local::fovChangerEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Custom FOV [%.0f]", Vars::Local::cameraFOV);
+
+                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled) {
+                    ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Idle...");
+                }
+            }
+            ImGui::End();
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor(2);
+        }
+
         if (!Vars::menuOpen) return;
 
-        ImGui::SetNextWindowSize(ImVec2(650, 450), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(650, 500), ImGuiCond_FirstUseEver);
         ImGui::Begin("Roblox External", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
@@ -221,6 +244,10 @@ public:
             if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
         }
 
+        ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
+        ImGui::SetCursorPosX(15);
+        ImGui::Checkbox("Show HUD", &Vars::showHUD);
+
         ImGui::EndChild();
 
         ImGui::SameLine();
@@ -234,12 +261,19 @@ public:
 
             ImGui::Checkbox("Enable Aimbot", &Vars::Aimbot::enabled);
             ImGui::Checkbox("Team Check", &Vars::Aimbot::teamCheck);
-            ImGui::Checkbox("Show FOV", &Vars::Aimbot::showFOV);
+            ImGui::Checkbox("Target NPCs/Bots", &Vars::Aimbot::targetNPCs); // [NEW]
             ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
 
-            ImGui::Spacing();
-            ImGui::Text("FOV Radius");
-            ImGui::SliderFloat("##FOV", &Vars::Aimbot::fovRadius, 10.0f, 500.0f, "%.0f");
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+            ImGui::Checkbox("Show FOV", &Vars::Aimbot::showFOV);
+            if (Vars::Aimbot::showFOV) {
+                ImGui::ColorEdit4("FOV Color", Vars::Aimbot::fovColor, ImGuiColorEditFlags_NoInputs);
+                ImGui::SliderFloat("Thickness", &Vars::Aimbot::fovThickness, 1.0f, 5.0f, "%.1f");
+                ImGui::SliderFloat("Radius", &Vars::Aimbot::fovRadius, 10.0f, 500.0f, "%.0f");
+            }
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
             ImGui::Text("Smoothing");
             ImGui::SliderFloat("##Smoothing", &Vars::Aimbot::smoothing, 1.0f, 20.0f, "%.1f");
@@ -274,22 +308,31 @@ public:
 
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
             ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
+            ImGui::Checkbox("Show NPCs/Bots", &Vars::ESP::showNPCs); // [NEW]
 
             ImGui::Text("Max Render Distance");
             ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
-            ImGui::Spacing();
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
             ImGui::Columns(2, nullptr, false);
+
             ImGui::Checkbox("Boxes", &Vars::ESP::boxes);
-            if (Vars::ESP::boxes) ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
-
-            ImGui::Checkbox("Skeleton", &Vars::ESP::skeleton);
-            if (Vars::ESP::skeleton) ImGui::ColorEdit4("Bone Color", Vars::ESP::skeletonColor, ImGuiColorEditFlags_NoInputs);
-
-            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
-            if (Vars::ESP::snaplines) ImGui::ColorEdit4("Line Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::boxes) {
+                const char* boxStyles[] = { "Full Box", "Corner Box" };
+                ImGui::Combo("##BoxStyle", &Vars::ESP::boxStyle, boxStyles, 2);
+                ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
+            }
+            ImGui::Spacing();
 
             ImGui::NextColumn();
+
+            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
+            if (Vars::ESP::snaplines) {
+                const char* linePos[] = { "Bottom", "Center", "Top" };
+                ImGui::Combo("##LinePos", &Vars::ESP::snaplinePos, linePos, 3);
+                ImGui::ColorEdit4("Line Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
+            }
+            ImGui::Spacing();
             ImGui::Checkbox("Names", &Vars::ESP::names);
             ImGui::Checkbox("Distance", &Vars::ESP::distance);
             ImGui::Checkbox("Health Bar", &Vars::ESP::healthBar);
@@ -308,15 +351,14 @@ public:
             ImGui::Checkbox("JumpPower", &Vars::Local::jumpEnabled);
             ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "%.0f");
 
-            ImGui::Spacing();
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
             ImGui::Text("Camera");
-            ImGui::Separator();
             ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
             ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
         }
 
         ImGui::EndChild();
-
         ImGui::End();
     }
 
