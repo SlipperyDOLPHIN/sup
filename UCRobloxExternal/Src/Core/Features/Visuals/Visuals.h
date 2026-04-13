@@ -22,6 +22,7 @@ namespace Visuals {
         if (!Vars::ESP::enabled) return;
 
         ImU32 boxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
+        ImU32 skelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
         ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
 
         for (auto& plr : PlayerCache::players) {
@@ -29,7 +30,6 @@ namespace Visuals {
 
             if (plr.distance > Vars::ESP::maxDistance) continue;
 
-            // [NEW] NPC / Team Checks
             if (plr.isNPC && !Vars::ESP::showNPCs) continue;
             if (!plr.isNPC && Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
@@ -326,6 +326,24 @@ namespace Visuals {
                     DrawCorner(ImVec2(minX, maxY), ImVec2(minX, maxY - lineH));
                     DrawCorner(ImVec2(maxX, maxY), ImVec2(maxX - lineW, maxY));
                     DrawCorner(ImVec2(maxX, maxY), ImVec2(maxX, maxY - lineH));
+                }
+            }
+
+            // SKELETON
+            if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
+                RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
+                RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
+                RBX::Vec2 lArm2D = W2S::WorldToScreen(leftArm.GetPos(), viewMatrix);
+                RBX::Vec2 rArm2D = W2S::WorldToScreen(rightArm.GetPos(), viewMatrix);
+                RBX::Vec2 lLeg2D = W2S::WorldToScreen(leftLeg.GetPos(), viewMatrix);
+                RBX::Vec2 rLeg2D = W2S::WorldToScreen(rightLeg.GetPos(), viewMatrix);
+
+                if (head2D.X != 0 && torso2D.X != 0 && lArm2D.X != 0 && rArm2D.X != 0 && lLeg2D.X != 0 && rLeg2D.X != 0) {
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), skelCol, 1.5f);
                 }
             }
 

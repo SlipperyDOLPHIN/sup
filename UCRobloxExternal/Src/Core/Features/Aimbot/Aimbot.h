@@ -61,7 +61,6 @@ namespace Aimbot {
             for (auto& plr : PlayerCache::players) {
                 if (!plr.isValid) continue;
 
-                // [NEW] NPC / Team Checks
                 if (plr.isNPC && !Vars::Aimbot::targetNPCs) continue;
                 if (!plr.isNPC && Vars::Aimbot::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 

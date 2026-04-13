@@ -1,7 +1,7 @@
 #pragma once
 #include "../../Game/SDK/SDK.h"
 #include "../Globals/Globals.h"
-#include "../Vars/Vars.h" // [NEW] Include Vars so the cache knows when to scan for NPCs
+#include "../Vars/Vars.h"
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -22,7 +22,7 @@ namespace PlayerCache {
         float distance;
 
         bool isValid;
-        bool isNPC; // [NEW] Flag to tell Visuals/Aimbot this is a bot
+        bool isNPC;
     };
 
     inline std::vector<CachedPlayer> players;
@@ -101,10 +101,8 @@ namespace PlayerCache {
         if (Vars::ESP::showNPCs || Vars::Aimbot::targetNPCs) {
             auto workspaceChildren = Globals::workspace.GetChildList();
             for (auto& child : workspaceChildren) {
-                // Ignore the LocalPlayer's Character
                 if (child.Addr == localChar.Addr) continue;
 
-                // Ignore if it's already cached as a Real Player's character
                 bool isRealPlayer = false;
                 for (auto& cached : players) {
                     if (!cached.isNPC && cached.characterAddr == child.Addr) {
@@ -124,11 +122,10 @@ namespace PlayerCache {
                 if (rootPart.Addr == 0) continue;
 
                 float health = Coms->ReadMemory<float>(humanoid.Addr + offsets::Health);
-                if (health <= 0) continue; // Don't show dead bots
+                if (health <= 0) continue;
 
                 CachedPlayer* existingNPC = nullptr;
                 for (auto& cached : players) {
-                    // For NPCs, the model address is essentially their unique ID
                     if (cached.isNPC && cached.playerAddr == child.Addr) {
                         existingNPC = &cached;
                         break;
@@ -145,7 +142,7 @@ namespace PlayerCache {
                     existingNPC = &players.back();
                 }
 
-                existingNPC->teamAddr = 0; // Bots don't have teams
+                existingNPC->teamAddr = 0;
                 existingNPC->characterAddr = child.Addr;
                 existingNPC->humanoidAddr = humanoid.Addr;
                 existingNPC->rootPartAddr = rootPart.Addr;

@@ -261,7 +261,7 @@ public:
 
             ImGui::Checkbox("Enable Aimbot", &Vars::Aimbot::enabled);
             ImGui::Checkbox("Team Check", &Vars::Aimbot::teamCheck);
-            ImGui::Checkbox("Target NPCs/Bots", &Vars::Aimbot::targetNPCs); // [NEW]
+            ImGui::Checkbox("Target NPCs/Bots", &Vars::Aimbot::targetNPCs);
             ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
@@ -308,7 +308,7 @@ public:
 
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
             ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
-            ImGui::Checkbox("Show NPCs/Bots", &Vars::ESP::showNPCs); // [NEW]
+            ImGui::Checkbox("Show NPCs/Bots", &Vars::ESP::showNPCs);
 
             ImGui::Text("Max Render Distance");
             ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
@@ -323,6 +323,11 @@ public:
                 ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
             }
             ImGui::Spacing();
+
+            ImGui::Checkbox("Skeleton", &Vars::ESP::skeleton);
+            if (Vars::ESP::skeleton) {
+                ImGui::ColorEdit4("Bone Color", Vars::ESP::skeletonColor, ImGuiColorEditFlags_NoInputs);
+            }
 
             ImGui::NextColumn();
 
