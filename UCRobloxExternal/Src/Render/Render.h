@@ -82,7 +82,7 @@ private:
 
 public:
     OverlayWindow() : windowHandle(nullptr), d3dDevice(nullptr), d3dContext(nullptr),
-                      swapChain(nullptr), renderTarget(nullptr) {
+        swapChain(nullptr), renderTarget(nullptr) {
         ZeroMemory(&windowClass, sizeof(windowClass));
     }
 
@@ -125,7 +125,33 @@ public:
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = nullptr;
 
-        ImGui::StyleColorsDark();
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.WindowRounding = 6.0f;
+        style.ChildRounding = 6.0f;
+        style.FrameRounding = 4.0f;
+        style.PopupRounding = 4.0f;
+        style.ScrollbarRounding = 4.0f;
+        style.GrabRounding = 4.0f;
+
+        ImVec4* colors = style.Colors;
+        colors[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+        colors[ImGuiCol_ChildBg] = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
+        colors[ImGuiCol_Border] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+        colors[ImGuiCol_FrameBgActive] = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
+        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.50f, 0.70f, 1.00f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+        colors[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX11_Init(d3dDevice, d3dContext);
 
@@ -141,7 +167,8 @@ public:
 
         if (Vars::menuOpen) {
             SetWindowLong(windowHandle, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW);
-        } else {
+        }
+        else {
             SetWindowLong(windowHandle, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW);
         }
 
@@ -155,18 +182,19 @@ public:
 
         ImGui::SetNextWindowSize(ImVec2(650, 450), ImGuiCond_FirstUseEver);
         ImGui::Begin("Roblox External", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
-        
+
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
-        
+
         ImGui::SetCursorPosX(15);
         ImVec2 buttonSize(130, 40);
-        
+
         if (Vars::selectedTab == 0) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
             if (ImGui::Button("Aimbot", buttonSize)) Vars::selectedTab = 0;
             ImGui::PopStyleColor(2);
-        } else {
+        }
+        else {
             if (ImGui::Button("Aimbot", buttonSize)) Vars::selectedTab = 0;
         }
 
@@ -176,7 +204,8 @@ public:
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
             if (ImGui::Button("Visuals", buttonSize)) Vars::selectedTab = 1;
             ImGui::PopStyleColor(2);
-        } else {
+        }
+        else {
             if (ImGui::Button("Visuals", buttonSize)) Vars::selectedTab = 1;
         }
 
@@ -186,42 +215,44 @@ public:
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
             if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
             ImGui::PopStyleColor(2);
-        } else {
+        }
+        else {
             if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
         }
-        
+
         ImGui::EndChild();
-        
+
         ImGui::SameLine();
 
         ImGui::BeginChild("Content", ImVec2(0, 0), true);
-        
+
         if (Vars::selectedTab == 0) {
             ImGui::Text("Aimbot");
             ImGui::Separator();
             ImGui::Spacing();
-            
+
             ImGui::Checkbox("Enable Aimbot", &Vars::Aimbot::enabled);
             ImGui::Checkbox("Show FOV", &Vars::Aimbot::showFOV);
-            
+            ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
+
             ImGui::Spacing();
             ImGui::Text("FOV Radius");
             ImGui::SliderFloat("##FOV", &Vars::Aimbot::fovRadius, 10.0f, 500.0f, "%.0f");
-            
+
             ImGui::Text("Smoothing");
             ImGui::SliderFloat("##Smoothing", &Vars::Aimbot::smoothing, 1.0f, 20.0f, "%.1f");
-            
+
             ImGui::Spacing();
             ImGui::Text("Aim Target");
             const char* targets[] = { "Head", "HumanoidRootPart" };
             ImGui::Combo("##Target", &Vars::Aimbot::aimTarget, targets, 2);
-            
+
             ImGui::Spacing();
             ImGui::Text("Aimbot Keybind");
-            const char* keys[] = { "None", "Left Mouse", "Right Mouse", "Middle Mouse", "X1 Mouse", "X2 Mouse", 
+            const char* keys[] = { "None", "Left Mouse", "Right Mouse", "Middle Mouse", "X1 Mouse", "X2 Mouse",
                                    "Shift", "Ctrl", "Alt", "C", "V", "X", "Z", "Q", "E", "R", "T", "F", "G" };
             const int keyValues[] = { 0, 1, 2, 4, 5, 6, 16, 17, 18, 0x43, 0x56, 0x58, 0x5A, 0x51, 0x45, 0x52, 0x54, 0x46, 0x47 };
-            
+
             int currentKeyIndex = 0;
             for (int i = 0; i < 19; i++) {
                 if (keyValues[i] == Vars::Aimbot::aimbotKey) {
@@ -229,7 +260,7 @@ public:
                     break;
                 }
             }
-            
+
             if (ImGui::Combo("##Keybind", &currentKeyIndex, keys, 19)) {
                 Vars::Aimbot::aimbotKey = keyValues[currentKeyIndex];
             }
@@ -240,11 +271,17 @@ public:
             ImGui::Spacing();
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
             ImGui::Spacing();
+
+            ImGui::Columns(2, nullptr, false);
             ImGui::Checkbox("Boxes", &Vars::ESP::boxes);
             ImGui::Checkbox("Names", &Vars::ESP::names);
-
             ImGui::Checkbox("Distance", &Vars::ESP::distance);
+
+            ImGui::NextColumn();
             ImGui::Checkbox("Health Bar", &Vars::ESP::healthBar);
+            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
+            ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
+            ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 2) {
             ImGui::Text("Local");
@@ -257,9 +294,9 @@ public:
             ImGui::Checkbox("JumpPower", &Vars::Local::jumpEnabled);
             ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "%.0f");
         }
-        
+
         ImGui::EndChild();
-        
+
         ImGui::End();
     }
 

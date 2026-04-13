@@ -7,6 +7,7 @@ namespace Vars {
     namespace Aimbot {
         inline bool enabled = false;
         inline bool showFOV = false;
+        inline bool drawTargetLine = false;
         inline float fovRadius = 100.0f;
         inline float smoothing = 5.0f;
         inline int aimTarget = 0;
@@ -20,6 +21,8 @@ namespace Vars {
         inline bool names = false;
         inline bool distance = false;
         inline bool healthBar = false;
+        inline bool snaplines = false;
+        inline bool crosshair = false;
     }
 
     namespace Local {

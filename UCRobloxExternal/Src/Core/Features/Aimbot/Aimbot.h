@@ -10,7 +10,7 @@ namespace Aimbot {
 
     inline uintptr_t lockedPlayerAddr = 0;
 
-    inline void MoveMouse(float x, float y) 
+    inline void MoveMouse(float x, float y)
     {
         INPUT input = { 0 };
         input.type = INPUT_MOUSE;
@@ -29,7 +29,7 @@ namespace Aimbot {
     }
 
 
-    inline void RunAimbot(const RBX::Mat4& viewMatrix) {
+    inline void RunAimbot(const RBX::Mat4& viewMatrix, ImDrawList* drawList) {
         if (!Vars::Aimbot::enabled) return;
 
         bool keyPressed = false;
@@ -43,7 +43,7 @@ namespace Aimbot {
         else if (Vars::Aimbot::aimbotKey == 18) keyPressed = (GetAsyncKeyState(VK_MENU) & 0x8000);
         else if (Vars::Aimbot::aimbotKey > 0) keyPressed = (GetAsyncKeyState(Vars::Aimbot::aimbotKey) & 0x8000);
 
-        if (!keyPressed) 
+        if (!keyPressed)
         {
             lockedPlayerAddr = 0;
             return;
@@ -51,26 +51,26 @@ namespace Aimbot {
 
         float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
         float screenH = static_cast<float>(GetSystemMetrics(SM_CYSCREEN));
-        //std::cout << "Screen: " << screenW << "x" << screenH << std::endl;
-        
+
         POINT mousePos;
         GetCursorPos(&mousePos);
         RBX::Vec2 aimCenter = { static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) };
 
         if (lockedPlayerAddr == 0) {
             float closestDist = 999999.0f;
-            RBX::Vec2 closestTarget = {0,0};
+            RBX::Vec2 closestTarget = { 0,0 };
             uintptr_t closestPlayerAddr = 0;
 
-            for(auto& plr : PlayerCache::players){
-                if(!plr.isValid) continue;
+            for (auto& plr : PlayerCache::players) {
+                if (!plr.isValid) continue;
 
                 auto character = RBX::RbxInstance(plr.characterAddr);
                 RBX::RbxInstance targetPart = RBX::RbxInstance(0);
 
                 if (Vars::Aimbot::aimTarget == 0) {
                     targetPart = character.FindChild("Head");
-                } else {
+                }
+                else {
                     targetPart = RBX::RbxInstance(plr.rootPartAddr);
                 }
 
@@ -100,16 +100,17 @@ namespace Aimbot {
             bool foundLockedPlayer = false;
             RBX::Vec2 targetScreenPos = { 0, 0 };
 
-            for(auto& plr : PlayerCache::players){
-                if(!plr.isValid) continue;
-                if(plr.playerAddr != lockedPlayerAddr) continue;
+            for (auto& plr : PlayerCache::players) {
+                if (!plr.isValid) continue;
+                if (plr.playerAddr != lockedPlayerAddr) continue;
 
                 auto character = RBX::RbxInstance(plr.characterAddr);
                 RBX::RbxInstance targetPart = RBX::RbxInstance(0);
 
                 if (Vars::Aimbot::aimTarget == 0) {
                     targetPart = character.FindChild("Head");
-                } else {
+                }
+                else {
                     targetPart = RBX::RbxInstance(plr.rootPartAddr);
                 }
 
@@ -131,11 +132,20 @@ namespace Aimbot {
                 return;
             }
 
+            if (Vars::Aimbot::drawTargetLine) {
+                drawList->AddLine(
+                    ImVec2(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y)),
+                    ImVec2(targetScreenPos.X, targetScreenPos.Y),
+                    IM_COL32(255, 50, 50, 255),
+                    1.5f
+                );
+            }
+
             float dx = targetScreenPos.X - mousePos.x;
             float dy = targetScreenPos.Y - mousePos.y;
 
             float smoothFactor = 1.0f / Vars::Aimbot::smoothing;
-            
+
             MoveMouse(dx * smoothFactor, dy * smoothFactor);
         }
     }

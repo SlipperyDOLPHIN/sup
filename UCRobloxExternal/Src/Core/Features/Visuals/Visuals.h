@@ -17,12 +17,12 @@ namespace Visuals {
         drawList->AddText(pos, textColor, text.c_str());
     }
 
-    inline void RenderESP(ImDrawList* drawList, const RBX::Mat4& viewMatrix) 
+    inline void RenderESP(ImDrawList* drawList, const RBX::Mat4& viewMatrix)
     {
-        if(!Vars::ESP::enabled) return;
+        if (!Vars::ESP::enabled) return;
 
-        for(auto& plr : PlayerCache::players){
-            if(!plr.isValid) continue;
+        for (auto& plr : PlayerCache::players) {
+            if (!plr.isValid) continue;
 
             auto character = RBX::RbxInstance(plr.characterAddr);
 
@@ -35,7 +35,7 @@ namespace Visuals {
 
             bool isR6 = (torso.Addr != 0);
 
-            if(!isR6){
+            if (!isR6) {
                 head = character.FindChild("Head");
                 torso = character.FindChild("UpperTorso");
                 leftArm = character.FindChild("LeftHand");
@@ -330,7 +330,7 @@ namespace Visuals {
                 ImU32 healthColor = IM_COL32(255 * (1 - healthPercent), 255 * healthPercent, 0, 255);
 
                 float barHeight = (maxY - minY) * healthPercent;
-                
+
                 drawList->AddRectFilled(
                     ImVec2(minX - 6, minY),
                     ImVec2(minX - 2, maxY),
@@ -358,6 +358,28 @@ namespace Visuals {
                 float textY = maxY + 2;
                 DrawOutlinedText(drawList, ImVec2(textX, textY), distText, IM_COL32(255, 255, 255, 255));
             }
+
+            if (Vars::ESP::snaplines) {
+                ImVec2 bottomCenter(screenSize.x / 2.0f, screenSize.y);
+                drawList->AddLine(
+                    bottomCenter,
+                    ImVec2((minX + maxX) / 2.0f, maxY),
+                    IM_COL32(255, 255, 255, 150),
+                    1.0f
+                );
+            }
+        }
+
+        if (Vars::ESP::crosshair) {
+            ImVec2 center = ImGui::GetIO().DisplaySize;
+            center.x /= 2.0f;
+            center.y /= 2.0f;
+
+            drawList->AddLine(ImVec2(center.x - 11, center.y), ImVec2(center.x + 11, center.y), IM_COL32(0, 0, 0, 255), 3.0f);
+            drawList->AddLine(ImVec2(center.x, center.y - 11), ImVec2(center.x, center.y + 11), IM_COL32(0, 0, 0, 255), 3.0f);
+
+            drawList->AddLine(ImVec2(center.x - 10, center.y), ImVec2(center.x + 10, center.y), IM_COL32(255, 255, 255, 255), 1.0f);
+            drawList->AddLine(ImVec2(center.x, center.y - 10), ImVec2(center.x, center.y + 10), IM_COL32(255, 255, 255, 255), 1.0f);
         }
     }
 }

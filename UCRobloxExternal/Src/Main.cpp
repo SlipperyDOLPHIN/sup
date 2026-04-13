@@ -48,45 +48,39 @@ void LocalPlayerThread() {
 }
 
 
-
-
 int main() {
     std::cout << "[*] Searching for Roblox...\n";
-    
+
     while (!Coms->Connect(L"RobloxPlayerBeta.exe")) {
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
-    
+
     system("cls");
-    
+
     auto baseAddr = Coms->GetBase();
     std::cout << "[+] Process ID: " << Coms->GetPID() << "\n";
     std::cout << "[+] Base Address: 0x" << std::hex << baseAddr << std::dec << "\n";
-    
+
     std::this_thread::sleep_for(std::chrono::seconds(3));
     system("cls");
 
-    
     auto fakeDataModelAddr = baseAddr + offsets::FakeDataModelPointer;
     auto fakeDataModel = Coms->ReadMemory<uintptr_t>(fakeDataModelAddr);
     auto dataModelAddr = fakeDataModel + offsets::FakeDataModelToDataModel;
     auto dataModelPtr = Coms->ReadMemory<uintptr_t>(dataModelAddr);
 
-    
     auto visualEngineAddr = baseAddr + offsets::VisualEnginePointer;
     auto visualEngine = Coms->ReadMemory<uintptr_t>(visualEngineAddr);
 
     Globals::dataModel = RBX::RbxInstance(dataModelPtr);
     Globals::renderEngine = RBX::RenderEngine(visualEngine);
 
-    
     Globals::workspace = Globals::dataModel.FindChildByClass("Workspace");
     Globals::players = Globals::dataModel.FindChildByClass("Players");
     Globals::camera = Globals::workspace.FindChildByClass("Camera");
 
-    
     auto localPlayerAddr = Coms->ReadMemory<uintptr_t>(Globals::players.Addr + offsets::LocalPlayer);
-    
+
     system("cls");
     Globals::localPlayer = RBX::RbxInstance(localPlayerAddr);
 
@@ -97,8 +91,6 @@ int main() {
 
     std::cout << "[+] Camera: 0x" << std::hex << Globals::camera.Addr << std::dec << "\n";
     std::cout << "[+] LocalPlayer: 0x" << std::hex << localPlayerAddr << std::dec << "\n\n";
-    
-    
 
     OverlayWindow overlay;
     if (!overlay.Initialize()) {
@@ -111,9 +103,9 @@ int main() {
 
     std::thread localThread(LocalPlayerThread);
 
-    while (Coms->IsConnected()) 
+    while (Coms->IsConnected())
     {
-        if (!IsGameRunning(L"Roblox")) 
+        if (!IsGameRunning(L"Roblox"))
         {
             break;
         }
@@ -123,15 +115,15 @@ int main() {
         }
 
         static int frameCounter = 0;
-        if(frameCounter % 3 == 0){
+        if (frameCounter % 3 == 0) {
             PlayerCache::UpdatePlayers();
         }
         frameCounter++;
 
         overlay.BeginFrame();
-        
+
         overlay.RenderMenu();
-                   
+
         ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
         static auto lastTime = std::chrono::high_resolution_clock::now();
@@ -169,17 +161,17 @@ int main() {
         }
 
         auto viewMatrix = Globals::renderEngine.GetViewMat();
-        
-        Aimbot::RunAimbot(viewMatrix);
+
+        Aimbot::RunAimbot(viewMatrix, drawList);
         Visuals::RenderESP(drawList, viewMatrix);
-        
+
         overlay.EndFrame();
     }
-    
+
     running = false;
     localThread.join();
 
     overlay.Cleanup();
-    
+
     return 0;
 }
