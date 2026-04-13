@@ -22,7 +22,6 @@ std::atomic<bool> running(true);
 
 void LocalPlayerThread() {
     while (running) {
-        // [NEW] Camera FOV Changer (Does not require character to be spawned)
         if (Globals::camera.Addr != 0 && Vars::Local::fovChangerEnabled) {
             Coms->WriteMemory<float>(Globals::camera.Addr + offsets::FOV, Vars::Local::cameraFOV);
         }
@@ -144,17 +143,30 @@ int main() {
             lastTime = currentTime;
         }
 
-        std::string watermark = "Made by 0xSyntex | unKnoWnCheaTs Roblox External | FPS: " + std::to_string(fps);
+        // --- NEW PREMIUM WATERMARK ---
+        std::string watermark = "Made by Orange  |  Roblox External  |  FPS: " + std::to_string(fps);
         ImVec2 textSize = ImGui::CalcTextSize(watermark.c_str());
         float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
-        float screenH = static_cast<float>(GetSystemMetrics(SM_CYSCREEN));
-        ImVec2 watermarkPos = ImVec2(screenW - textSize.x - 10, 10);
 
-        drawList->AddText(ImVec2(watermarkPos.x - 1, watermarkPos.y), IM_COL32(0, 0, 0, 255), watermark.c_str());
-        drawList->AddText(ImVec2(watermarkPos.x + 1, watermarkPos.y), IM_COL32(0, 0, 0, 255), watermark.c_str());
-        drawList->AddText(ImVec2(watermarkPos.x, watermarkPos.y - 1), IM_COL32(0, 0, 0, 255), watermark.c_str());
-        drawList->AddText(ImVec2(watermarkPos.x, watermarkPos.y + 1), IM_COL32(0, 0, 0, 255), watermark.c_str());
-        drawList->AddText(watermarkPos, IM_COL32(255, 255, 255, 255), watermark.c_str());
+        float paddingX = 12.0f;
+        float paddingY = 8.0f;
+        ImVec2 boxMin(screenW - textSize.x - (paddingX * 2) - 20, 20);
+        ImVec2 boxMax(screenW - 20, 20 + textSize.y + (paddingY * 2));
+
+        // Dark rounded background box
+        drawList->AddRectFilled(boxMin, boxMax, IM_COL32(20, 20, 22, 240), 4.0f);
+
+        // Orange inner top accent line
+        drawList->AddRectFilled(ImVec2(boxMin.x + 1, boxMin.y + 1), ImVec2(boxMax.x - 1, boxMin.y + 3), IM_COL32(255, 140, 0, 255), 4.0f);
+
+        // Subtle outline border
+        drawList->AddRect(boxMin, boxMax, IM_COL32(60, 60, 65, 255), 4.0f);
+
+        // Render the text with drop shadow
+        ImVec2 textPos(boxMin.x + paddingX, boxMin.y + paddingY + 2);
+        drawList->AddText(ImVec2(textPos.x + 1, textPos.y + 1), IM_COL32(0, 0, 0, 255), watermark.c_str()); // Drop shadow
+        drawList->AddText(textPos, IM_COL32(240, 240, 240, 255), watermark.c_str()); // Actual text
+        // -----------------------------
 
         if (Vars::Aimbot::enabled && Vars::Aimbot::showFOV) {
             POINT p;
