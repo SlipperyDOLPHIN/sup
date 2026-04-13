@@ -69,6 +69,11 @@ namespace Config {
         WriteFloat("Aimbot", "fovThickness", Vars::Aimbot::fovThickness, file);
         WriteColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, file);
 
+        WriteBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, file);
+        WriteInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, file);
+        WriteFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, file);
+        WriteInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, file);
+
         WriteBool("ESP", "enabled", Vars::ESP::enabled, file);
         WriteBool("ESP", "teamCheck", Vars::ESP::teamCheck, file);
         WriteBool("ESP", "showNPCs", Vars::ESP::showNPCs, file);
@@ -76,6 +81,8 @@ namespace Config {
         WriteInt("ESP", "boxStyle", Vars::ESP::boxStyle, file);
         WriteBool("ESP", "boxFill", Vars::ESP::boxFill, file);
         WriteBool("ESP", "skeleton", Vars::ESP::skeleton, file);
+        WriteBool("ESP", "headDot", Vars::ESP::headDot, file);
+        WriteFloat("ESP", "headDotSize", Vars::ESP::headDotSize, file);
         WriteBool("ESP", "names", Vars::ESP::names, file);
         WriteBool("ESP", "distance", Vars::ESP::distance, file);
         WriteBool("ESP", "weapon", Vars::ESP::weapon, file);
@@ -84,11 +91,16 @@ namespace Config {
         WriteBool("ESP", "snaplines", Vars::ESP::snaplines, file);
         WriteInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, file);
         WriteBool("ESP", "crosshair", Vars::ESP::crosshair, file);
+        WriteFloat("ESP", "crosshairSize", Vars::ESP::crosshairSize, file);
+        WriteFloat("ESP", "crosshairThickness", Vars::ESP::crosshairThickness, file);
         WriteFloat("ESP", "maxDistance", Vars::ESP::maxDistance, file);
+
         WriteColor("ESP", "boxColor", Vars::ESP::boxColor, file);
         WriteColor("ESP", "boxFillColor", Vars::ESP::boxFillColor, file);
         WriteColor("ESP", "skeletonColor", Vars::ESP::skeletonColor, file);
+        WriteColor("ESP", "headDotColor", Vars::ESP::headDotColor, file);
         WriteColor("ESP", "snaplineColor", Vars::ESP::snaplineColor, file);
+        WriteColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, file);
 
         WriteBool("Local", "speedEnabled", Vars::Local::speedEnabled, file);
         WriteFloat("Local", "walkSpeed", Vars::Local::walkSpeed, file);
@@ -116,6 +128,11 @@ namespace Config {
         Vars::Aimbot::fovThickness = ReadFloat("Aimbot", "fovThickness", Vars::Aimbot::fovThickness, file);
         ReadColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, file);
 
+        Vars::TriggerBot::enabled = ReadBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, file);
+        Vars::TriggerBot::triggerKey = ReadInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, file);
+        Vars::TriggerBot::triggerDistance = ReadFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, file);
+        Vars::TriggerBot::clickDelay = ReadInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, file);
+
         Vars::ESP::enabled = ReadBool("ESP", "enabled", Vars::ESP::enabled, file);
         Vars::ESP::teamCheck = ReadBool("ESP", "teamCheck", Vars::ESP::teamCheck, file);
         Vars::ESP::showNPCs = ReadBool("ESP", "showNPCs", Vars::ESP::showNPCs, file);
@@ -123,6 +140,8 @@ namespace Config {
         Vars::ESP::boxStyle = ReadInt("ESP", "boxStyle", Vars::ESP::boxStyle, file);
         Vars::ESP::boxFill = ReadBool("ESP", "boxFill", Vars::ESP::boxFill, file);
         Vars::ESP::skeleton = ReadBool("ESP", "skeleton", Vars::ESP::skeleton, file);
+        Vars::ESP::headDot = ReadBool("ESP", "headDot", Vars::ESP::headDot, file);
+        Vars::ESP::headDotSize = ReadFloat("ESP", "headDotSize", Vars::ESP::headDotSize, file);
         Vars::ESP::names = ReadBool("ESP", "names", Vars::ESP::names, file);
         Vars::ESP::distance = ReadBool("ESP", "distance", Vars::ESP::distance, file);
         Vars::ESP::weapon = ReadBool("ESP", "weapon", Vars::ESP::weapon, file);
@@ -131,11 +150,16 @@ namespace Config {
         Vars::ESP::snaplines = ReadBool("ESP", "snaplines", Vars::ESP::snaplines, file);
         Vars::ESP::snaplinePos = ReadInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, file);
         Vars::ESP::crosshair = ReadBool("ESP", "crosshair", Vars::ESP::crosshair, file);
+        Vars::ESP::crosshairSize = ReadFloat("ESP", "crosshairSize", Vars::ESP::crosshairSize, file);
+        Vars::ESP::crosshairThickness = ReadFloat("ESP", "crosshairThickness", Vars::ESP::crosshairThickness, file);
         Vars::ESP::maxDistance = ReadFloat("ESP", "maxDistance", Vars::ESP::maxDistance, file);
+
         ReadColor("ESP", "boxColor", Vars::ESP::boxColor, file);
         ReadColor("ESP", "boxFillColor", Vars::ESP::boxFillColor, file);
         ReadColor("ESP", "skeletonColor", Vars::ESP::skeletonColor, file);
+        ReadColor("ESP", "headDotColor", Vars::ESP::headDotColor, file);
         ReadColor("ESP", "snaplineColor", Vars::ESP::snaplineColor, file);
+        ReadColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, file);
 
         Vars::Local::speedEnabled = ReadBool("Local", "speedEnabled", Vars::Local::speedEnabled, file);
         Vars::Local::walkSpeed = ReadFloat("Local", "walkSpeed", Vars::Local::walkSpeed, file);

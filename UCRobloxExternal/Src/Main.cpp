@@ -170,6 +170,8 @@ int main() {
 
         auto viewMatrix = Globals::renderEngine.GetViewMat();
 
+        Aimbot::RunTriggerBot(viewMatrix);
+
         Aimbot::RunAimbot(viewMatrix, drawList);
         Visuals::RenderESP(drawList, viewMatrix);
 

@@ -6,7 +6,7 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "../Core/Vars/Vars.h"
-#include "../Core/Config/Config.h" // [NEW] Include our new Config System!
+#include "../Core/Config/Config.h" 
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -156,7 +156,6 @@ public:
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX11_Init(d3dDevice, d3dContext);
 
-        // [NEW] Auto-load Config on start!
         Config::Load();
 
         return true;
@@ -193,11 +192,17 @@ public:
                 ImGui::Separator();
 
                 if (Vars::Aimbot::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Aimbot Active");
+
+                if (Vars::Aimbot::enabled && Vars::Aimbot::currentTargetName != "None") {
+                    ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "    -> Locked: %s", Vars::Aimbot::currentTargetName.c_str());
+                }
+
+                if (Vars::TriggerBot::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] TriggerBot Active");
                 if (Vars::ESP::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] ESP Active");
                 if (Vars::Local::speedEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] WalkSpeed [%.0f]", Vars::Local::walkSpeed);
                 if (Vars::Local::fovChangerEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Custom FOV [%.0f]", Vars::Local::cameraFOV);
 
-                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled) {
+                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled && !Vars::TriggerBot::enabled) {
                     ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Idle...");
                 }
             }
@@ -208,7 +213,7 @@ public:
 
         if (!Vars::menuOpen) return;
 
-        ImGui::SetNextWindowSize(ImVec2(650, 500), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(700, 560), ImGuiCond_FirstUseEver);
         ImGui::Begin("Roblox External", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
@@ -248,7 +253,6 @@ public:
             if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
         }
 
-        // [NEW] Config Tab Button
         ImGui::SetCursorPosX(15);
         if (Vars::selectedTab == 3) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
@@ -279,6 +283,15 @@ public:
             ImGui::Checkbox("Team Check", &Vars::Aimbot::teamCheck);
             ImGui::Checkbox("Target NPCs/Bots", &Vars::Aimbot::targetNPCs);
             ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+            ImGui::Text("TriggerBot (Auto-Shoot)");
+            ImGui::Checkbox("Enable TriggerBot", &Vars::TriggerBot::enabled);
+            if (Vars::TriggerBot::enabled) {
+                ImGui::SliderFloat("Hitbox Radius", &Vars::TriggerBot::triggerDistance, 5.0f, 50.0f, "%.1f px");
+                ImGui::SliderInt("Click Delay", &Vars::TriggerBot::clickDelay, 10, 500, "%d ms");
+            }
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
@@ -354,6 +367,13 @@ public:
             if (Vars::ESP::skeleton) {
                 ImGui::ColorEdit4("Bone Color", Vars::ESP::skeletonColor, ImGuiColorEditFlags_NoInputs);
             }
+            ImGui::Spacing();
+
+            ImGui::Checkbox("Head Dot", &Vars::ESP::headDot);
+            if (Vars::ESP::headDot) {
+                ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 2.0f, 15.0f, "%.1f");
+                ImGui::ColorEdit4("Dot Color", Vars::ESP::headDotColor, ImGuiColorEditFlags_NoInputs);
+            }
 
             ImGui::NextColumn();
 
@@ -372,8 +392,15 @@ public:
             if (Vars::ESP::healthBar) {
                 ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText);
             }
+            ImGui::Spacing();
 
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
+            if (Vars::ESP::crosshair) {
+                ImGui::SliderFloat("CH Size", &Vars::ESP::crosshairSize, 2.0f, 30.0f, "%.0f");
+                ImGui::SliderFloat("CH Thick", &Vars::ESP::crosshairThickness, 1.0f, 5.0f, "%.1f");
+                ImGui::ColorEdit4("CH Color", Vars::ESP::crosshairColor, ImGuiColorEditFlags_NoInputs);
+            }
+
             ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 2) {
@@ -394,7 +421,6 @@ public:
             ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
             ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
         }
-        // [NEW] Config Tab Content
         else if (Vars::selectedTab == 3) {
             ImGui::Text("Configuration");
             ImGui::Separator();

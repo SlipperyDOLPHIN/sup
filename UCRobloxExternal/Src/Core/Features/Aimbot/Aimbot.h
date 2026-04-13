@@ -5,10 +5,12 @@
 #include "../../../Game/SDK/SDK.h"
 #include <windows.h>
 #include <cmath>
+#include <chrono>
 
 namespace Aimbot {
 
     inline uintptr_t lockedPlayerAddr = 0;
+    inline auto lastTriggerTime = std::chrono::high_resolution_clock::now(); // [NEW] Triggerbot delay timer
 
     inline void MoveMouse(float x, float y)
     {
@@ -20,14 +22,82 @@ namespace Aimbot {
         SendInput(1, &input, sizeof(INPUT));
     }
 
+    // [NEW] Simulate Mouse Click for TriggerBot
+    inline void MouseClick() {
+        INPUT input = { 0 };
+        input.type = INPUT_MOUSE;
+        input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+        SendInput(1, &input, sizeof(INPUT));
+
+        Sleep(10); // Hold for 10ms
+
+        input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        SendInput(1, &input, sizeof(INPUT));
+    }
+
     inline float GetDistance2D(RBX::Vec2 a, RBX::Vec2 b) {
         float dx = a.X - b.X;
         float dy = a.Y - b.Y;
         return sqrtf(dx * dx + dy * dy);
     }
 
+    // [NEW] TriggerBot Logic
+    inline void RunTriggerBot(const RBX::Mat4& viewMatrix) {
+        if (!Vars::TriggerBot::enabled) return;
+
+        bool keyPressed = false;
+        if (Vars::TriggerBot::triggerKey == 1) keyPressed = (GetAsyncKeyState(VK_LBUTTON) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 2) keyPressed = (GetAsyncKeyState(VK_RBUTTON) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 4) keyPressed = (GetAsyncKeyState(VK_MBUTTON) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 5) keyPressed = (GetAsyncKeyState(VK_XBUTTON1) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 6) keyPressed = (GetAsyncKeyState(VK_XBUTTON2) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 16) keyPressed = (GetAsyncKeyState(VK_SHIFT) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 17) keyPressed = (GetAsyncKeyState(VK_CONTROL) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey == 18) keyPressed = (GetAsyncKeyState(VK_MENU) & 0x8000);
+        else if (Vars::TriggerBot::triggerKey > 0) keyPressed = (GetAsyncKeyState(Vars::TriggerBot::triggerKey) & 0x8000);
+
+        if (!keyPressed) return;
+
+        // Check if enough time has passed since last click
+        auto now = std::chrono::high_resolution_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTriggerTime).count() < Vars::TriggerBot::clickDelay) {
+            return;
+        }
+
+        POINT mousePos;
+        GetCursorPos(&mousePos);
+        RBX::Vec2 aimCenter = { static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) };
+
+        for (auto& plr : PlayerCache::players) {
+            if (!plr.isValid) continue;
+
+            if (plr.isNPC && !Vars::Aimbot::targetNPCs) continue;
+            if (!plr.isNPC && Vars::Aimbot::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
+
+            auto character = RBX::RbxInstance(plr.characterAddr);
+            auto targetPart = character.FindChild("Head");
+            if (targetPart.Addr == 0) targetPart = character.FindChild("UpperTorso");
+            if (targetPart.Addr == 0) targetPart = character.FindChild("Torso");
+            if (targetPart.Addr == 0) continue;
+
+            RBX::Vec2 screenPos = W2S::WorldToScreen(targetPart.GetPos(), viewMatrix);
+            if (screenPos.X == 0 && screenPos.Y == 0) continue;
+
+            float dist2D = GetDistance2D(aimCenter, screenPos);
+
+            if (dist2D < Vars::TriggerBot::triggerDistance) {
+                MouseClick();
+                lastTriggerTime = std::chrono::high_resolution_clock::now();
+                break; // Only shoot once per frame
+            }
+        }
+    }
+
     inline void RunAimbot(const RBX::Mat4& viewMatrix, ImDrawList* drawList) {
-        if (!Vars::Aimbot::enabled) return;
+        if (!Vars::Aimbot::enabled) {
+            Vars::Aimbot::currentTargetName = "None"; // Clear target when disabled
+            return;
+        }
 
         bool keyPressed = false;
         if (Vars::Aimbot::aimbotKey == 1) keyPressed = (GetAsyncKeyState(VK_LBUTTON) & 0x8000);
@@ -43,6 +113,7 @@ namespace Aimbot {
         if (!keyPressed)
         {
             lockedPlayerAddr = 0;
+            Vars::Aimbot::currentTargetName = "None"; // Clear target when key released
             return;
         }
 
@@ -54,9 +125,10 @@ namespace Aimbot {
         RBX::Vec2 aimCenter = { static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) };
 
         if (lockedPlayerAddr == 0) {
-            float bestScore = 999999.0f; // [NEW] Best score based on Priority
+            float bestScore = 999999.0f;
             RBX::Vec2 closestTarget = { 0,0 };
             uintptr_t closestPlayerAddr = 0;
+            std::string tempTargetName = "";
 
             for (auto& plr : PlayerCache::players) {
                 if (!plr.isValid) continue;
@@ -84,7 +156,6 @@ namespace Aimbot {
 
                 float dist2D = GetDistance2D(aimCenter, screenPos);
 
-                // [NEW] Aimbot Priority Logic
                 if (dist2D < Vars::Aimbot::fovRadius) {
                     float currentScore = (Vars::Aimbot::aimMethod == 0) ? dist2D : plr.distance;
 
@@ -92,12 +163,14 @@ namespace Aimbot {
                         bestScore = currentScore;
                         closestTarget = screenPos;
                         closestPlayerAddr = plr.playerAddr;
+                        tempTargetName = plr.name;
                     }
                 }
             }
 
             if (closestPlayerAddr != 0) {
                 lockedPlayerAddr = closestPlayerAddr;
+                Vars::Aimbot::currentTargetName = tempTargetName; // [NEW] Set HUD Target
             }
         }
 
@@ -134,6 +207,7 @@ namespace Aimbot {
 
             if (!foundLockedPlayer) {
                 lockedPlayerAddr = 0;
+                Vars::Aimbot::currentTargetName = "None"; // Clear target if player died/left
                 return;
             }
 

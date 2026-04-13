@@ -24,6 +24,7 @@ namespace Visuals {
         ImU32 boxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
         ImU32 boxFillCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxFillColor[0], Vars::ESP::boxFillColor[1], Vars::ESP::boxFillColor[2], Vars::ESP::boxFillColor[3]));
         ImU32 skelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
+        ImU32 headDotCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::headDotColor[0], Vars::ESP::headDotColor[1], Vars::ESP::headDotColor[2], Vars::ESP::headDotColor[3]));
         ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
 
         for (auto& plr : PlayerCache::players) {
@@ -303,7 +304,6 @@ namespace Visuals {
 
             if (boxWidth > MAX_BOX_WIDTH || boxHeight > MAX_BOX_HEIGHT) continue;
 
-            // [NEW] Box Fill Rendered Below Box Outline
             if (Vars::ESP::boxes && Vars::ESP::boxFill) {
                 drawList->AddRectFilled(ImVec2(minX, minY), ImVec2(maxX, maxY), boxFillCol);
             }
@@ -335,6 +335,15 @@ namespace Visuals {
                 }
             }
 
+            // [NEW] Head Dot
+            if (Vars::ESP::headDot) {
+                RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
+                if (head2D.X != 0 && head2D.Y != 0) {
+                    drawList->AddCircleFilled(ImVec2(head2D.X, head2D.Y), Vars::ESP::headDotSize + 1.0f, IM_COL32(0, 0, 0, 255)); // Outline
+                    drawList->AddCircleFilled(ImVec2(head2D.X, head2D.Y), Vars::ESP::headDotSize, headDotCol); // Inner
+                }
+            }
+
             if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
                 RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
                 RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
@@ -361,7 +370,6 @@ namespace Visuals {
                 drawList->AddRectFilled(ImVec2(minX - 6, minY - 1), ImVec2(minX - 2, maxY + 1), IM_COL32(0, 0, 0, 255));
                 drawList->AddRectFilled(ImVec2(minX - 5, maxY - barHeight), ImVec2(minX - 3, maxY), healthColor);
 
-                // [NEW] Health Text Output
                 if (Vars::ESP::healthText) {
                     std::string hpStr = std::to_string(static_cast<int>(plr.health)) + " HP";
                     ImVec2 hpSize = ImGui::CalcTextSize(hpStr.c_str());
@@ -385,7 +393,6 @@ namespace Visuals {
                 bottomTextOffset += textSize.y + 2.0f;
             }
 
-            // [NEW] Weapon ESP
             if (Vars::ESP::weapon && !plr.equippedTool.empty()) {
                 ImVec2 textSize = ImGui::CalcTextSize(plr.equippedTool.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
@@ -402,16 +409,23 @@ namespace Visuals {
             }
         }
 
+        // [NEW] Customizable Crosshair Rendering
         if (Vars::ESP::crosshair) {
+            ImU32 chCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::crosshairColor[0], Vars::ESP::crosshairColor[1], Vars::ESP::crosshairColor[2], Vars::ESP::crosshairColor[3]));
             ImVec2 center = ImGui::GetIO().DisplaySize;
             center.x /= 2.0f;
             center.y /= 2.0f;
 
-            drawList->AddLine(ImVec2(center.x - 11, center.y), ImVec2(center.x + 11, center.y), IM_COL32(0, 0, 0, 255), 3.0f);
-            drawList->AddLine(ImVec2(center.x, center.y - 11), ImVec2(center.x, center.y + 11), IM_COL32(0, 0, 0, 255), 3.0f);
+            float s = Vars::ESP::crosshairSize;
+            float t = Vars::ESP::crosshairThickness;
 
-            drawList->AddLine(ImVec2(center.x - 10, center.y), ImVec2(center.x + 10, center.y), IM_COL32(255, 255, 255, 255), 1.0f);
-            drawList->AddLine(ImVec2(center.x, center.y - 10), ImVec2(center.x, center.y + 10), IM_COL32(255, 255, 255, 255), 1.0f);
+            // Black Outline
+            drawList->AddLine(ImVec2(center.x - s - 1, center.y), ImVec2(center.x + s + 1, center.y), IM_COL32(0, 0, 0, 255), t + 2.0f);
+            drawList->AddLine(ImVec2(center.x, center.y - s - 1), ImVec2(center.x, center.y + s + 1), IM_COL32(0, 0, 0, 255), t + 2.0f);
+
+            // Inner Color
+            drawList->AddLine(ImVec2(center.x - s, center.y), ImVec2(center.x + s, center.y), chCol, t);
+            drawList->AddLine(ImVec2(center.x, center.y - s), ImVec2(center.x, center.y + s), chCol, t);
         }
     }
 }
