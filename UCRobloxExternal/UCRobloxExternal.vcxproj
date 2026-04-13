@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Core\Cache\Cache.h" />
+    <ClInclude Include="Src\Core\Config\Config.h" />
     <ClInclude Include="Src\Core\Features\Aimbot\Aimbot.h" />
     <ClInclude Include="Src\Core\Features\Visuals\Visuals.h" />
     <ClInclude Include="Src\Core\Globals\Globals.h" />

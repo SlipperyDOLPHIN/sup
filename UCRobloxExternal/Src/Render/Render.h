@@ -6,6 +6,7 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "../Core/Vars/Vars.h"
+#include "../Core/Config/Config.h" // [NEW] Include our new Config System!
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -155,6 +156,9 @@ public:
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX11_Init(d3dDevice, d3dContext);
 
+        // [NEW] Auto-load Config on start!
+        Config::Load();
+
         return true;
     }
 
@@ -204,7 +208,7 @@ public:
 
         if (!Vars::menuOpen) return;
 
-        ImGui::SetNextWindowSize(ImVec2(680, 520), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(650, 500), ImGuiCond_FirstUseEver);
         ImGui::Begin("Roblox External", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
@@ -244,6 +248,18 @@ public:
             if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
         }
 
+        // [NEW] Config Tab Button
+        ImGui::SetCursorPosX(15);
+        if (Vars::selectedTab == 3) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
+            if (ImGui::Button("Config", buttonSize)) Vars::selectedTab = 3;
+            ImGui::PopStyleColor(2);
+        }
+        else {
+            if (ImGui::Button("Config", buttonSize)) Vars::selectedTab = 3;
+        }
+
         ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
         ImGui::SetCursorPosX(15);
         ImGui::Checkbox("Show HUD", &Vars::showHUD);
@@ -280,7 +296,7 @@ public:
 
             ImGui::Spacing();
             ImGui::Text("Aim Method (Priority)");
-            const char* methods[] = { "Closest to Crosshair", "Closest Distance" }; // [NEW] Priority Selection
+            const char* methods[] = { "Closest to Crosshair", "Closest Distance" };
             ImGui::Combo("##AimMethod", &Vars::Aimbot::aimMethod, methods, 2);
 
             ImGui::Spacing();
@@ -327,7 +343,7 @@ public:
                 ImGui::Combo("##BoxStyle", &Vars::ESP::boxStyle, boxStyles, 2);
                 ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
 
-                ImGui::Checkbox("Box Fill", &Vars::ESP::boxFill); // [NEW] Box Fill Option
+                ImGui::Checkbox("Box Fill", &Vars::ESP::boxFill);
                 if (Vars::ESP::boxFill) {
                     ImGui::ColorEdit4("Fill Color", Vars::ESP::boxFillColor, ImGuiColorEditFlags_NoInputs);
                 }
@@ -350,11 +366,11 @@ public:
             ImGui::Spacing();
             ImGui::Checkbox("Names", &Vars::ESP::names);
             ImGui::Checkbox("Distance", &Vars::ESP::distance);
-            ImGui::Checkbox("Weapon", &Vars::ESP::weapon); // [NEW] Weapon Option
+            ImGui::Checkbox("Weapon", &Vars::ESP::weapon);
 
             ImGui::Checkbox("Health Bar", &Vars::ESP::healthBar);
             if (Vars::ESP::healthBar) {
-                ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText); // [NEW] Health Text Option
+                ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText);
             }
 
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
@@ -377,6 +393,28 @@ public:
             ImGui::Text("Camera");
             ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
             ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
+        }
+        // [NEW] Config Tab Content
+        else if (Vars::selectedTab == 3) {
+            ImGui::Text("Configuration");
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Save and load your preferred settings.");
+            ImGui::Spacing(); ImGui::Spacing();
+
+            if (ImGui::Button("Save Config", ImVec2(140, 40))) {
+                Config::Save();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Load Config", ImVec2(140, 40))) {
+                Config::Load();
+            }
+
+            ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "Your config is saved automatically to:");
+            ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "roblox_external_config.ini");
+            ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "(In the folder where your .exe is located)");
         }
 
         ImGui::EndChild();
