@@ -10,7 +10,7 @@
 namespace Aimbot {
 
     inline uintptr_t lockedPlayerAddr = 0;
-    inline auto lastTriggerTime = std::chrono::high_resolution_clock::now(); // [NEW] Triggerbot delay timer
+    inline auto lastTriggerTime = std::chrono::high_resolution_clock::now();
 
     inline void MoveMouse(float x, float y)
     {
@@ -22,14 +22,13 @@ namespace Aimbot {
         SendInput(1, &input, sizeof(INPUT));
     }
 
-    // [NEW] Simulate Mouse Click for TriggerBot
     inline void MouseClick() {
         INPUT input = { 0 };
         input.type = INPUT_MOUSE;
         input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
         SendInput(1, &input, sizeof(INPUT));
 
-        Sleep(10); // Hold for 10ms
+        Sleep(10);
 
         input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
         SendInput(1, &input, sizeof(INPUT));
@@ -41,7 +40,6 @@ namespace Aimbot {
         return sqrtf(dx * dx + dy * dy);
     }
 
-    // [NEW] TriggerBot Logic
     inline void RunTriggerBot(const RBX::Mat4& viewMatrix) {
         if (!Vars::TriggerBot::enabled) return;
 
@@ -58,7 +56,6 @@ namespace Aimbot {
 
         if (!keyPressed) return;
 
-        // Check if enough time has passed since last click
         auto now = std::chrono::high_resolution_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTriggerTime).count() < Vars::TriggerBot::clickDelay) {
             return;
@@ -88,14 +85,14 @@ namespace Aimbot {
             if (dist2D < Vars::TriggerBot::triggerDistance) {
                 MouseClick();
                 lastTriggerTime = std::chrono::high_resolution_clock::now();
-                break; // Only shoot once per frame
+                break;
             }
         }
     }
 
     inline void RunAimbot(const RBX::Mat4& viewMatrix, ImDrawList* drawList) {
         if (!Vars::Aimbot::enabled) {
-            Vars::Aimbot::currentTargetName = "None"; // Clear target when disabled
+            Vars::Aimbot::currentTargetName = "None";
             return;
         }
 
@@ -113,7 +110,7 @@ namespace Aimbot {
         if (!keyPressed)
         {
             lockedPlayerAddr = 0;
-            Vars::Aimbot::currentTargetName = "None"; // Clear target when key released
+            Vars::Aimbot::currentTargetName = "None";
             return;
         }
 
@@ -170,7 +167,7 @@ namespace Aimbot {
 
             if (closestPlayerAddr != 0) {
                 lockedPlayerAddr = closestPlayerAddr;
-                Vars::Aimbot::currentTargetName = tempTargetName; // [NEW] Set HUD Target
+                Vars::Aimbot::currentTargetName = tempTargetName;
             }
         }
 
@@ -207,7 +204,7 @@ namespace Aimbot {
 
             if (!foundLockedPlayer) {
                 lockedPlayerAddr = 0;
-                Vars::Aimbot::currentTargetName = "None"; // Clear target if player died/left
+                Vars::Aimbot::currentTargetName = "None";
                 return;
             }
 

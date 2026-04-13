@@ -335,12 +335,11 @@ namespace Visuals {
                 }
             }
 
-            // [NEW] Head Dot
             if (Vars::ESP::headDot) {
                 RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
                 if (head2D.X != 0 && head2D.Y != 0) {
-                    drawList->AddCircleFilled(ImVec2(head2D.X, head2D.Y), Vars::ESP::headDotSize + 1.0f, IM_COL32(0, 0, 0, 255)); // Outline
-                    drawList->AddCircleFilled(ImVec2(head2D.X, head2D.Y), Vars::ESP::headDotSize, headDotCol); // Inner
+                    drawList->AddCircleFilled(ImVec2(head2D.X, head2D.Y), Vars::ESP::headDotSize + 1.0f, IM_COL32(0, 0, 0, 255));
+                    drawList->AddCircleFilled(ImVec2(head2D.X, head2D.Y), Vars::ESP::headDotSize, headDotCol);
                 }
             }
 
@@ -409,7 +408,6 @@ namespace Visuals {
             }
         }
 
-        // [NEW] Customizable Crosshair Rendering
         if (Vars::ESP::crosshair) {
             ImU32 chCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::crosshairColor[0], Vars::ESP::crosshairColor[1], Vars::ESP::crosshairColor[2], Vars::ESP::crosshairColor[3]));
             ImVec2 center = ImGui::GetIO().DisplaySize;
@@ -419,11 +417,9 @@ namespace Visuals {
             float s = Vars::ESP::crosshairSize;
             float t = Vars::ESP::crosshairThickness;
 
-            // Black Outline
             drawList->AddLine(ImVec2(center.x - s - 1, center.y), ImVec2(center.x + s + 1, center.y), IM_COL32(0, 0, 0, 255), t + 2.0f);
             drawList->AddLine(ImVec2(center.x, center.y - s - 1), ImVec2(center.x, center.y + s + 1), IM_COL32(0, 0, 0, 255), t + 2.0f);
 
-            // Inner Color
             drawList->AddLine(ImVec2(center.x - s, center.y), ImVec2(center.x + s, center.y), chCol, t);
             drawList->AddLine(ImVec2(center.x, center.y - s), ImVec2(center.x, center.y + s), chCol, t);
         }

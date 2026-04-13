@@ -72,4 +72,8 @@ namespace Vars {
         inline bool fovChangerEnabled = false;
         inline float cameraFOV = 70.0f;
     }
+
+    namespace Misc {
+        inline bool streamProof = false;
+    }
 }

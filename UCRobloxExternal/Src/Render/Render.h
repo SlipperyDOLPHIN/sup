@@ -6,7 +6,7 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "../Core/Vars/Vars.h"
-#include "../Core/Config/Config.h" 
+#include "../Core/Config/Config.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -127,31 +127,31 @@ public:
         io.IniFilename = nullptr;
 
         ImGuiStyle& style = ImGui::GetStyle();
-        style.WindowRounding = 6.0f;
-        style.ChildRounding = 6.0f;
-        style.FrameRounding = 4.0f;
-        style.PopupRounding = 4.0f;
-        style.ScrollbarRounding = 4.0f;
-        style.GrabRounding = 4.0f;
+        style.WindowRounding = 8.0f;
+        style.ChildRounding = 8.0f;
+        style.FrameRounding = 6.0f;
+        style.PopupRounding = 6.0f;
+        style.ScrollbarRounding = 6.0f;
+        style.GrabRounding = 6.0f;
 
         ImVec4* colors = style.Colors;
-        colors[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-        colors[ImGuiCol_ChildBg] = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
-        colors[ImGuiCol_Border] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
-        colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
-        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+        colors[ImGuiCol_ChildBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+        colors[ImGuiCol_Border] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
         colors[ImGuiCol_FrameBgActive] = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
-        colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-        colors[ImGuiCol_TitleBgActive] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-        colors[ImGuiCol_CheckMark] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
-        colors[ImGuiCol_SliderGrab] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
         colors[ImGuiCol_SliderGrabActive] = ImVec4(0.50f, 0.70f, 1.00f, 1.00f);
-        colors[ImGuiCol_Button] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
-        colors[ImGuiCol_ButtonHovered] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
-        colors[ImGuiCol_ButtonActive] = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
-        colors[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
-        colors[ImGuiCol_HeaderHovered] = ImVec4(0.40f, 0.60f, 0.90f, 1.00f);
-        colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.50f, 0.80f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.30f, 0.50f, 0.85f, 1.00f);
+        colors[ImGuiCol_Header] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.50f, 0.85f, 1.00f);
 
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX11_Init(d3dDevice, d3dContext);
@@ -201,8 +201,9 @@ public:
                 if (Vars::ESP::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] ESP Active");
                 if (Vars::Local::speedEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] WalkSpeed [%.0f]", Vars::Local::walkSpeed);
                 if (Vars::Local::fovChangerEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Custom FOV [%.0f]", Vars::Local::cameraFOV);
+                if (Vars::Misc::streamProof) ImGui::TextColored(ImVec4(0.6f, 0.4f, 1.0f, 1.0f), "[+] Stream Proof Active");
 
-                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled && !Vars::TriggerBot::enabled) {
+                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled && !Vars::TriggerBot::enabled && !Vars::Misc::streamProof) {
                     ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Idle...");
                 }
             }
@@ -222,8 +223,8 @@ public:
         ImVec2 buttonSize(130, 40);
 
         if (Vars::selectedTab == 0) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
             if (ImGui::Button("Aimbot", buttonSize)) Vars::selectedTab = 0;
             ImGui::PopStyleColor(2);
         }
@@ -233,8 +234,8 @@ public:
 
         ImGui::SetCursorPosX(15);
         if (Vars::selectedTab == 1) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
             if (ImGui::Button("Visuals", buttonSize)) Vars::selectedTab = 1;
             ImGui::PopStyleColor(2);
         }
@@ -244,8 +245,8 @@ public:
 
         ImGui::SetCursorPosX(15);
         if (Vars::selectedTab == 2) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
             if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
             ImGui::PopStyleColor(2);
         }
@@ -255,13 +256,13 @@ public:
 
         ImGui::SetCursorPosX(15);
         if (Vars::selectedTab == 3) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.8f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.9f, 1.0f));
-            if (ImGui::Button("Config", buttonSize)) Vars::selectedTab = 3;
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
+            if (ImGui::Button("Settings", buttonSize)) Vars::selectedTab = 3;
             ImGui::PopStyleColor(2);
         }
         else {
-            if (ImGui::Button("Config", buttonSize)) Vars::selectedTab = 3;
+            if (ImGui::Button("Settings", buttonSize)) Vars::selectedTab = 3;
         }
 
         ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
@@ -286,7 +287,7 @@ public:
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-            ImGui::Text("TriggerBot (Auto-Shoot)");
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "TriggerBot (Auto-Shoot)");
             ImGui::Checkbox("Enable TriggerBot", &Vars::TriggerBot::enabled);
             if (Vars::TriggerBot::enabled) {
                 ImGui::SliderFloat("Hitbox Radius", &Vars::TriggerBot::triggerDistance, 5.0f, 50.0f, "%.1f px");
@@ -422,9 +423,17 @@ public:
             ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
         }
         else if (Vars::selectedTab == 3) {
-            ImGui::Text("Configuration");
+            ImGui::Text("Settings");
             ImGui::Separator();
             ImGui::Spacing();
+
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Premium Features");
+            ImGui::Checkbox("Stream Proof (Hide from OBS)", &Vars::Misc::streamProof);
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Hides the cheat overlay from screen recording software (OBS, Discord, etc.)");
+            }
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
             ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Save and load your preferred settings.");
             ImGui::Spacing(); ImGui::Spacing();
@@ -436,11 +445,6 @@ public:
             if (ImGui::Button("Load Config", ImVec2(140, 40))) {
                 Config::Load();
             }
-
-            ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "Your config is saved automatically to:");
-            ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "roblox_external_config.ini");
-            ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "(In the folder where your .exe is located)");
         }
 
         ImGui::EndChild();

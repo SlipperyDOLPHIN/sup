@@ -16,7 +16,7 @@ namespace PlayerCache {
         uintptr_t teamAddr;
 
         std::string name;
-        std::string equippedTool; // [NEW]
+        std::string equippedTool;
         RBX::Vec3 position;
         float health;
         float maxHealth;
@@ -89,7 +89,6 @@ namespace PlayerCache {
             if (rootPart.Addr == 0) rootPart = character.FindChild("Head");
             if (rootPart.Addr == 0) continue;
 
-            // [NEW] Read Equipped Tool
             auto tool = character.FindChildByClass("Tool");
             if (tool.Addr != 0) {
                 existingPlayer->equippedTool = tool.GetName();
@@ -152,7 +151,6 @@ namespace PlayerCache {
                     existingNPC = &players.back();
                 }
 
-                // [NEW] Read Equipped Tool for Bots
                 auto tool = child.FindChildByClass("Tool");
                 if (tool.Addr != 0) {
                     existingNPC->equippedTool = tool.GetName();

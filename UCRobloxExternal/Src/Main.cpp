@@ -116,6 +116,13 @@ int main() {
             Vars::menuOpen = !Vars::menuOpen;
         }
 
+        if (Vars::Misc::streamProof) {
+            SetWindowDisplayAffinity(overlay.GetWindowHandle(), WDA_EXCLUDEFROMCAPTURE);
+        }
+        else {
+            SetWindowDisplayAffinity(overlay.GetWindowHandle(), WDA_NONE);
+        }
+
         static int frameCounter = 0;
         if (frameCounter % 3 == 0) {
             PlayerCache::UpdatePlayers();
