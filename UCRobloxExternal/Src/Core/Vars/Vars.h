@@ -23,6 +23,13 @@ namespace Vars {
         inline bool healthBar = false;
         inline bool snaplines = false;
         inline bool crosshair = false;
+        inline bool skeleton = false; // [NEW]
+        inline float maxDistance = 1000.0f; // [NEW]
+
+        // [NEW] Colors (R, G, B, A)
+        inline float boxColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        inline float skeletonColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        inline float snaplineColor[4] = { 1.0f, 1.0f, 1.0f, 0.6f };
     }
 
     namespace Local {
@@ -30,5 +37,8 @@ namespace Vars {
         inline float walkSpeed = 16.0f;
         inline bool jumpEnabled = false;
         inline float jumpPower = 50.0f;
+
+        inline bool fovChangerEnabled = false; // [NEW]
+        inline float cameraFOV = 70.0f;        // [NEW]
     }
 }

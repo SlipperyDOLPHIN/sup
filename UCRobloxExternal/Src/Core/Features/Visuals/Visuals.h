@@ -21,8 +21,15 @@ namespace Visuals {
     {
         if (!Vars::ESP::enabled) return;
 
+        ImU32 boxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
+        ImU32 skelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
+        ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
+
         for (auto& plr : PlayerCache::players) {
             if (!plr.isValid) continue;
+
+            // [NEW] Distance Limiter
+            if (plr.distance > Vars::ESP::maxDistance) continue;
 
             auto character = RBX::RbxInstance(plr.characterAddr);
 
@@ -303,26 +310,31 @@ namespace Visuals {
             if (boxWidth > MAX_BOX_WIDTH || boxHeight > MAX_BOX_HEIGHT) continue;
 
             if (Vars::ESP::boxes) {
-                drawList->AddRect(
-                    ImVec2(minX, minY),
-                    ImVec2(maxX, maxY),
-                    IM_COL32(0, 0, 0, 255),
-                    0.0f, 0, 3.0f
-                );
+                // Black Outlines
+                drawList->AddRect(ImVec2(minX - 1, minY - 1), ImVec2(maxX + 1, maxY + 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
+                drawList->AddRect(ImVec2(minX + 1, minY + 1), ImVec2(maxX - 1, maxY - 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
 
-                drawList->AddRect(
-                    ImVec2(minX, minY),
-                    ImVec2(maxX, maxY),
-                    IM_COL32(255, 255, 255, 255),
-                    0.0f, 0, 1.0f
-                );
+                // Actual Colored Box
+                drawList->AddRect(ImVec2(minX, minY), ImVec2(maxX, maxY), boxCol, 0.0f, 0, 1.0f);
+            }
 
-                drawList->AddRect(
-                    ImVec2(minX + 1, minY + 1),
-                    ImVec2(maxX - 1, maxY - 1),
-                    IM_COL32(0, 0, 0, 255),
-                    0.0f, 0, 1.0f
-                );
+            // [NEW] Skeleton ESP
+            if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
+                RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
+                RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
+                RBX::Vec2 lArm2D = W2S::WorldToScreen(leftArm.GetPos(), viewMatrix);
+                RBX::Vec2 rArm2D = W2S::WorldToScreen(rightArm.GetPos(), viewMatrix);
+                RBX::Vec2 lLeg2D = W2S::WorldToScreen(leftLeg.GetPos(), viewMatrix);
+                RBX::Vec2 rLeg2D = W2S::WorldToScreen(rightLeg.GetPos(), viewMatrix);
+
+                // Ensure all points are on screen
+                if (head2D.X != 0 && torso2D.X != 0 && lArm2D.X != 0 && rArm2D.X != 0 && lLeg2D.X != 0 && rLeg2D.X != 0) {
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), skelCol, 1.5f);
+                }
             }
 
             if (Vars::ESP::healthBar && plr.maxHealth > 0) {
@@ -331,17 +343,8 @@ namespace Visuals {
 
                 float barHeight = (maxY - minY) * healthPercent;
 
-                drawList->AddRectFilled(
-                    ImVec2(minX - 6, minY),
-                    ImVec2(minX - 2, maxY),
-                    IM_COL32(0, 0, 0, 200)
-                );
-
-                drawList->AddRectFilled(
-                    ImVec2(minX - 5, maxY - barHeight),
-                    ImVec2(minX - 3, maxY),
-                    healthColor
-                );
+                drawList->AddRectFilled(ImVec2(minX - 6, minY - 1), ImVec2(minX - 2, maxY + 1), IM_COL32(0, 0, 0, 255));
+                drawList->AddRectFilled(ImVec2(minX - 5, maxY - barHeight), ImVec2(minX - 3, maxY), healthColor);
             }
 
             if (Vars::ESP::names) {
@@ -356,20 +359,16 @@ namespace Visuals {
                 ImVec2 textSize = ImGui::CalcTextSize(distText.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
                 float textY = maxY + 2;
-                DrawOutlinedText(drawList, ImVec2(textX, textY), distText, IM_COL32(255, 255, 255, 255));
+                DrawOutlinedText(drawList, ImVec2(textX, textY), distText, IM_COL32(200, 200, 200, 255));
             }
 
             if (Vars::ESP::snaplines) {
                 ImVec2 bottomCenter(screenSize.x / 2.0f, screenSize.y);
-                drawList->AddLine(
-                    bottomCenter,
-                    ImVec2((minX + maxX) / 2.0f, maxY),
-                    IM_COL32(255, 255, 255, 150),
-                    1.0f
-                );
+                drawList->AddLine(bottomCenter, ImVec2((minX + maxX) / 2.0f, maxY), snapCol, 1.0f);
             }
         }
 
+        // Render Crosshair outside the player loop
         if (Vars::ESP::crosshair) {
             ImVec2 center = ImGui::GetIO().DisplaySize;
             center.x /= 2.0f;

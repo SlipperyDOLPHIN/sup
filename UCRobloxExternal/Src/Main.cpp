@@ -20,9 +20,13 @@ bool IsGameRunning(const wchar_t* windowTitle)
 
 std::atomic<bool> running(true);
 
-
 void LocalPlayerThread() {
     while (running) {
+        // [NEW] Camera FOV Changer (Does not require character to be spawned)
+        if (Globals::camera.Addr != 0 && Vars::Local::fovChangerEnabled) {
+            Coms->WriteMemory<float>(Globals::camera.Addr + offsets::FOV, Vars::Local::cameraFOV);
+        }
+
         auto character = Globals::localPlayer.GetModelRef();
         if (character.Addr == 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));

@@ -125,6 +125,7 @@ public:
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = nullptr;
 
+        // Custom Modern Theme
         ImGuiStyle& style = ImGui::GetStyle();
         style.WindowRounding = 6.0f;
         style.ChildRounding = 6.0f;
@@ -269,30 +270,47 @@ public:
             ImGui::Text("Visuals");
             ImGui::Separator();
             ImGui::Spacing();
+
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
+
+            ImGui::Text("Max Render Distance");
+            ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
             ImGui::Spacing();
 
             ImGui::Columns(2, nullptr, false);
             ImGui::Checkbox("Boxes", &Vars::ESP::boxes);
-            ImGui::Checkbox("Names", &Vars::ESP::names);
-            ImGui::Checkbox("Distance", &Vars::ESP::distance);
+            if (Vars::ESP::boxes) ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
+
+            ImGui::Checkbox("Skeleton", &Vars::ESP::skeleton);
+            if (Vars::ESP::skeleton) ImGui::ColorEdit4("Bone Color", Vars::ESP::skeletonColor, ImGuiColorEditFlags_NoInputs);
+
+            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
+            if (Vars::ESP::snaplines) ImGui::ColorEdit4("Line Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
 
             ImGui::NextColumn();
+            ImGui::Checkbox("Names", &Vars::ESP::names);
+            ImGui::Checkbox("Distance", &Vars::ESP::distance);
             ImGui::Checkbox("Health Bar", &Vars::ESP::healthBar);
-            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
             ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 2) {
-            ImGui::Text("Local");
+            ImGui::Text("Local Player");
             ImGui::Separator();
             ImGui::Spacing();
+
             ImGui::Checkbox("WalkSpeed", &Vars::Local::speedEnabled);
             ImGui::SliderFloat("##WalkSpeed", &Vars::Local::walkSpeed, 16.0f, 200.0f, "%.0f");
 
             ImGui::Spacing();
             ImGui::Checkbox("JumpPower", &Vars::Local::jumpEnabled);
             ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "%.0f");
+
+            ImGui::Spacing();
+            ImGui::Text("Camera");
+            ImGui::Separator();
+            ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
+            ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
         }
 
         ImGui::EndChild();
