@@ -233,6 +233,7 @@ public:
             ImGui::Spacing();
 
             ImGui::Checkbox("Enable Aimbot", &Vars::Aimbot::enabled);
+            ImGui::Checkbox("Team Check", &Vars::Aimbot::teamCheck);
             ImGui::Checkbox("Show FOV", &Vars::Aimbot::showFOV);
             ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
 
@@ -272,6 +273,7 @@ public:
             ImGui::Spacing();
 
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
+            ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
 
             ImGui::Text("Max Render Distance");
             ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");

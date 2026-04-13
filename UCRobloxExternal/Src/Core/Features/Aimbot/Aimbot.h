@@ -20,14 +20,11 @@ namespace Aimbot {
         SendInput(1, &input, sizeof(INPUT));
     }
 
-
-
     inline float GetDistance2D(RBX::Vec2 a, RBX::Vec2 b) {
         float dx = a.X - b.X;
         float dy = a.Y - b.Y;
         return sqrtf(dx * dx + dy * dy);
     }
-
 
     inline void RunAimbot(const RBX::Mat4& viewMatrix, ImDrawList* drawList) {
         if (!Vars::Aimbot::enabled) return;
@@ -63,6 +60,9 @@ namespace Aimbot {
 
             for (auto& plr : PlayerCache::players) {
                 if (!plr.isValid) continue;
+
+                // [NEW] Team Check
+                if (Vars::Aimbot::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
                 auto character = RBX::RbxInstance(plr.characterAddr);
                 RBX::RbxInstance targetPart = RBX::RbxInstance(0);

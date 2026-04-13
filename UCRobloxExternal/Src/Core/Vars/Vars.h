@@ -6,6 +6,7 @@ namespace Vars {
 
     namespace Aimbot {
         inline bool enabled = false;
+        inline bool teamCheck = false; // [NEW] Team Check
         inline bool showFOV = false;
         inline bool drawTargetLine = false;
         inline float fovRadius = 100.0f;
@@ -17,16 +18,16 @@ namespace Vars {
 
     namespace ESP {
         inline bool enabled = false;
+        inline bool teamCheck = false; // [NEW] Team Check
         inline bool boxes = false;
         inline bool names = false;
         inline bool distance = false;
         inline bool healthBar = false;
         inline bool snaplines = false;
         inline bool crosshair = false;
-        inline bool skeleton = false; // [NEW]
-        inline float maxDistance = 1000.0f; // [NEW]
+        inline bool skeleton = false;
+        inline float maxDistance = 1000.0f;
 
-        // [NEW] Colors (R, G, B, A)
         inline float boxColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
         inline float skeletonColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
         inline float snaplineColor[4] = { 1.0f, 1.0f, 1.0f, 0.6f };
@@ -38,7 +39,7 @@ namespace Vars {
         inline bool jumpEnabled = false;
         inline float jumpPower = 50.0f;
 
-        inline bool fovChangerEnabled = false; // [NEW]
-        inline float cameraFOV = 70.0f;        // [NEW]
+        inline bool fovChangerEnabled = false;
+        inline float cameraFOV = 70.0f;
     }
 }

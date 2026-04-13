@@ -28,8 +28,10 @@ namespace Visuals {
         for (auto& plr : PlayerCache::players) {
             if (!plr.isValid) continue;
 
-            // [NEW] Distance Limiter
             if (plr.distance > Vars::ESP::maxDistance) continue;
+
+            // [NEW] Team Check
+            if (Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
             auto character = RBX::RbxInstance(plr.characterAddr);
 
@@ -310,15 +312,11 @@ namespace Visuals {
             if (boxWidth > MAX_BOX_WIDTH || boxHeight > MAX_BOX_HEIGHT) continue;
 
             if (Vars::ESP::boxes) {
-                // Black Outlines
                 drawList->AddRect(ImVec2(minX - 1, minY - 1), ImVec2(maxX + 1, maxY + 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
                 drawList->AddRect(ImVec2(minX + 1, minY + 1), ImVec2(maxX - 1, maxY - 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
-
-                // Actual Colored Box
                 drawList->AddRect(ImVec2(minX, minY), ImVec2(maxX, maxY), boxCol, 0.0f, 0, 1.0f);
             }
 
-            // [NEW] Skeleton ESP
             if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
                 RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
                 RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
@@ -327,7 +325,6 @@ namespace Visuals {
                 RBX::Vec2 lLeg2D = W2S::WorldToScreen(leftLeg.GetPos(), viewMatrix);
                 RBX::Vec2 rLeg2D = W2S::WorldToScreen(rightLeg.GetPos(), viewMatrix);
 
-                // Ensure all points are on screen
                 if (head2D.X != 0 && torso2D.X != 0 && lArm2D.X != 0 && rArm2D.X != 0 && lLeg2D.X != 0 && rLeg2D.X != 0) {
                     drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, 1.5f);
                     drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, 1.5f);
@@ -368,7 +365,6 @@ namespace Visuals {
             }
         }
 
-        // Render Crosshair outside the player loop
         if (Vars::ESP::crosshair) {
             ImVec2 center = ImGui::GetIO().DisplaySize;
             center.x /= 2.0f;
