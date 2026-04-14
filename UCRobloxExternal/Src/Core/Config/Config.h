@@ -1,67 +1,79 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include <vector>
 #include "../Vars/Vars.h"
 
 namespace Config {
-    inline std::string GetPath() {
-        char path[MAX_PATH];
-        GetCurrentDirectoryA(MAX_PATH, path);
-        return std::string(path) + "\\roblox_premium_config.ini";
+
+    inline std::string GetExeDirectory() {
+        char buffer[MAX_PATH];
+        GetModuleFileNameA(NULL, buffer, MAX_PATH);
+        std::string path(buffer);
+        std::string::size_type pos = path.find_last_of("\\/");
+        return path.substr(0, pos);
     }
 
-    // [NEW] Path for saving UI window positions
+    inline void RefreshConfigs() {
+        Vars::Configs::list.clear();
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind = FindFirstFileA((GetExeDirectory() + "\\*.ini").c_str(), &fd);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                std::string fname = fd.cFileName;
+                if (fname != "roblox_imgui_layout.ini") {
+                    Vars::Configs::list.push_back(fname);
+                }
+            } while (FindNextFileA(hFind, &fd));
+            FindClose(hFind);
+        }
+        if (Vars::Configs::list.empty()) {
+            Vars::Configs::list.push_back("default.ini");
+        }
+    }
+
+    inline std::string GetCurrentPath() {
+        if (Vars::Configs::list.empty()) return GetExeDirectory() + "\\default.ini";
+        return GetExeDirectory() + "\\" + Vars::Configs::list[Vars::Configs::selectedIndex];
+    }
+
     inline std::string GetLayoutPath() {
-        char path[MAX_PATH];
-        GetCurrentDirectoryA(MAX_PATH, path);
-        return std::string(path) + "\\roblox_imgui_layout.ini";
+        return GetExeDirectory() + "\\roblox_imgui_layout.ini";
     }
 
-    inline void WriteBool(const char* section, const char* key, bool value, const std::string& file) {
-        WritePrivateProfileStringA(section, key, value ? "1" : "0", file.c_str());
-    }
-    inline void WriteInt(const char* section, const char* key, int value, const std::string& file) {
-        WritePrivateProfileStringA(section, key, std::to_string(value).c_str(), file.c_str());
-    }
-    inline void WriteFloat(const char* section, const char* key, float value, const std::string& file) {
-        WritePrivateProfileStringA(section, key, std::to_string(value).c_str(), file.c_str());
-    }
-    inline void WriteColor(const char* section, const char* key, float* color, const std::string& file) {
-        std::string val = std::to_string(color[0]) + "," + std::to_string(color[1]) + "," + std::to_string(color[2]) + "," + std::to_string(color[3]);
-        WritePrivateProfileStringA(section, key, val.c_str(), file.c_str());
+    inline void WriteBool(const char* s, const char* k, bool v, const std::string& f) { WritePrivateProfileStringA(s, k, v ? "1" : "0", f.c_str()); }
+    inline void WriteInt(const char* s, const char* k, int v, const std::string& f) { WritePrivateProfileStringA(s, k, std::to_string(v).c_str(), f.c_str()); }
+    inline void WriteFloat(const char* s, const char* k, float v, const std::string& f) { WritePrivateProfileStringA(s, k, std::to_string(v).c_str(), f.c_str()); }
+    inline void WriteColor(const char* s, const char* k, float* c, const std::string& f) {
+        std::string val = std::to_string(c[0]) + "," + std::to_string(c[1]) + "," + std::to_string(c[2]) + "," + std::to_string(c[3]);
+        WritePrivateProfileStringA(s, k, val.c_str(), f.c_str());
     }
 
-    inline bool ReadBool(const char* section, const char* key, bool defaultVal, const std::string& file) {
-        return GetPrivateProfileIntA(section, key, defaultVal, file.c_str()) != 0;
+    inline bool ReadBool(const char* s, const char* k, bool d, const std::string& f) { return GetPrivateProfileIntA(s, k, d, f.c_str()) != 0; }
+    inline int ReadInt(const char* s, const char* k, int d, const std::string& f) { return GetPrivateProfileIntA(s, k, d, f.c_str()); }
+    inline float ReadFloat(const char* s, const char* k, float d, const std::string& f) {
+        char buf[64]; GetPrivateProfileStringA(s, k, std::to_string(d).c_str(), buf, 64, f.c_str()); return std::stof(buf);
     }
-    inline int ReadInt(const char* section, const char* key, int defaultVal, const std::string& file) {
-        return GetPrivateProfileIntA(section, key, defaultVal, file.c_str());
-    }
-    inline float ReadFloat(const char* section, const char* key, float defaultVal, const std::string& file) {
-        char buf[64];
-        GetPrivateProfileStringA(section, key, std::to_string(defaultVal).c_str(), buf, 64, file.c_str());
-        return std::stof(buf);
-    }
-    inline void ReadColor(const char* section, const char* key, float* color, const std::string& file) {
-        char buf[128];
-        GetPrivateProfileStringA(section, key, "", buf, 128, file.c_str());
-        std::string s(buf);
-        if (s.empty()) return;
+    inline void ReadColor(const char* s, const char* k, float* c, const std::string& f) {
+        char buf[128]; GetPrivateProfileStringA(s, k, "", buf, 128, f.c_str());
+        std::string str(buf); if (str.empty()) return;
         size_t pos = 0;
         for (int i = 0; i < 4; i++) {
-            size_t next = s.find(',', pos);
+            size_t next = str.find(',', pos);
             if (next == std::string::npos && i < 3) break;
-            try { color[i] = std::stof(s.substr(pos, next - pos)); }
+            try { c[i] = std::stof(str.substr(pos, next - pos)); }
             catch (...) {}
             if (next == std::string::npos) break;
             pos = next + 1;
         }
     }
 
-    inline void Save() {
-        std::string f = GetPath();
+    inline void Save(std::string specificName = "") {
+        std::string f = specificName.empty() ? GetCurrentPath() : GetExeDirectory() + "\\" + specificName;
+
         WriteBool("Global", "showHUD", Vars::showHUD, f);
         WriteBool("Global", "showWatermark", Vars::showWatermark, f);
+        WriteBool("Global", "showPlayerList", Vars::showPlayerList, f);
         WriteBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
         WriteBool("Radar", "enabled", Vars::Radar::enabled, f);
@@ -74,7 +86,10 @@ namespace Config {
         WriteBool("Aimbot", "teamCheck", Vars::Aimbot::teamCheck, f);
         WriteBool("Aimbot", "targetNPCs", Vars::Aimbot::targetNPCs, f);
         WriteBool("Aimbot", "showFOV", Vars::Aimbot::showFOV, f);
+        WriteBool("Aimbot", "dynamicFOV", Vars::Aimbot::dynamicFOV, f);
         WriteBool("Aimbot", "drawTargetLine", Vars::Aimbot::drawTargetLine, f);
+        WriteBool("Aimbot", "prediction", Vars::Aimbot::prediction, f);
+        WriteFloat("Aimbot", "bulletSpeed", Vars::Aimbot::bulletSpeed, f);
         WriteFloat("Aimbot", "fovRadius", Vars::Aimbot::fovRadius, f);
         WriteFloat("Aimbot", "smoothing", Vars::Aimbot::smoothing, f);
         WriteInt("Aimbot", "aimTarget", Vars::Aimbot::aimTarget, f);
@@ -88,13 +103,22 @@ namespace Config {
         WriteFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, f);
         WriteInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, f);
 
+        WriteBool("AutoClicker", "enabled", Vars::AutoClicker::enabled, f);
+        WriteInt("AutoClicker", "clickKey", Vars::AutoClicker::clickKey, f);
+        WriteInt("AutoClicker", "minCPS", Vars::AutoClicker::minCPS, f);
+        WriteInt("AutoClicker", "maxCPS", Vars::AutoClicker::maxCPS, f);
+
         WriteBool("ESP", "enabled", Vars::ESP::enabled, f);
         WriteBool("ESP", "teamCheck", Vars::ESP::teamCheck, f);
         WriteBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
+        WriteBool("ESP", "items", Vars::ESP::items, f);
+        WriteFloat("ESP", "maxItemDistance", Vars::ESP::maxItemDistance, f);
+        WriteColor("ESP", "itemColor", Vars::ESP::itemColor, f);
         WriteBool("ESP", "highlightTarget", Vars::ESP::highlightTarget, f);
         WriteBool("ESP", "viewAngles", Vars::ESP::viewAngles, f);
         WriteBool("ESP", "offScreenArrows", Vars::ESP::offScreenArrows, f);
         WriteFloat("ESP", "arrowRadius", Vars::ESP::arrowRadius, f);
+        WriteFloat("ESP", "arrowSize", Vars::ESP::arrowSize, f);
         WriteBool("ESP", "boxes", Vars::ESP::boxes, f);
         WriteInt("ESP", "boxStyle", Vars::ESP::boxStyle, f);
         WriteBool("ESP", "boxFill", Vars::ESP::boxFill, f);
@@ -131,12 +155,15 @@ namespace Config {
         WriteFloat("Local", "jumpPower", Vars::Local::jumpPower, f);
         WriteBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, f);
         WriteFloat("Local", "cameraFOV", Vars::Local::cameraFOV, f);
+
+        if (!specificName.empty()) RefreshConfigs();
     }
 
     inline void Load() {
-        std::string f = GetPath();
+        std::string f = GetCurrentPath();
         Vars::showHUD = ReadBool("Global", "showHUD", Vars::showHUD, f);
-        Vars::showWatermark = ReadBool("Global", "showWatermark", true, f);
+        Vars::showWatermark = ReadBool("Global", "showWatermark", Vars::showWatermark, f);
+        Vars::showPlayerList = ReadBool("Global", "showPlayerList", Vars::showPlayerList, f);
         Vars::Misc::streamProof = ReadBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
         Vars::Radar::enabled = ReadBool("Radar", "enabled", Vars::Radar::enabled, f);
@@ -149,7 +176,10 @@ namespace Config {
         Vars::Aimbot::teamCheck = ReadBool("Aimbot", "teamCheck", Vars::Aimbot::teamCheck, f);
         Vars::Aimbot::targetNPCs = ReadBool("Aimbot", "targetNPCs", Vars::Aimbot::targetNPCs, f);
         Vars::Aimbot::showFOV = ReadBool("Aimbot", "showFOV", Vars::Aimbot::showFOV, f);
+        Vars::Aimbot::dynamicFOV = ReadBool("Aimbot", "dynamicFOV", Vars::Aimbot::dynamicFOV, f);
         Vars::Aimbot::drawTargetLine = ReadBool("Aimbot", "drawTargetLine", Vars::Aimbot::drawTargetLine, f);
+        Vars::Aimbot::prediction = ReadBool("Aimbot", "prediction", Vars::Aimbot::prediction, f);
+        Vars::Aimbot::bulletSpeed = ReadFloat("Aimbot", "bulletSpeed", Vars::Aimbot::bulletSpeed, f);
         Vars::Aimbot::fovRadius = ReadFloat("Aimbot", "fovRadius", Vars::Aimbot::fovRadius, f);
         Vars::Aimbot::smoothing = ReadFloat("Aimbot", "smoothing", Vars::Aimbot::smoothing, f);
         Vars::Aimbot::aimTarget = ReadInt("Aimbot", "aimTarget", Vars::Aimbot::aimTarget, f);
@@ -163,13 +193,22 @@ namespace Config {
         Vars::TriggerBot::triggerDistance = ReadFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, f);
         Vars::TriggerBot::clickDelay = ReadInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, f);
 
+        Vars::AutoClicker::enabled = ReadBool("AutoClicker", "enabled", Vars::AutoClicker::enabled, f);
+        Vars::AutoClicker::clickKey = ReadInt("AutoClicker", "clickKey", Vars::AutoClicker::clickKey, f);
+        Vars::AutoClicker::minCPS = ReadInt("AutoClicker", "minCPS", Vars::AutoClicker::minCPS, f);
+        Vars::AutoClicker::maxCPS = ReadInt("AutoClicker", "maxCPS", Vars::AutoClicker::maxCPS, f);
+
         Vars::ESP::enabled = ReadBool("ESP", "enabled", Vars::ESP::enabled, f);
         Vars::ESP::teamCheck = ReadBool("ESP", "teamCheck", Vars::ESP::teamCheck, f);
         Vars::ESP::showNPCs = ReadBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
+        Vars::ESP::items = ReadBool("ESP", "items", Vars::ESP::items, f);
+        Vars::ESP::maxItemDistance = ReadFloat("ESP", "maxItemDistance", Vars::ESP::maxItemDistance, f);
+        ReadColor("ESP", "itemColor", Vars::ESP::itemColor, f);
         Vars::ESP::highlightTarget = ReadBool("ESP", "highlightTarget", Vars::ESP::highlightTarget, f);
         Vars::ESP::viewAngles = ReadBool("ESP", "viewAngles", Vars::ESP::viewAngles, f);
         Vars::ESP::offScreenArrows = ReadBool("ESP", "offScreenArrows", Vars::ESP::offScreenArrows, f);
         Vars::ESP::arrowRadius = ReadFloat("ESP", "arrowRadius", Vars::ESP::arrowRadius, f);
+        Vars::ESP::arrowSize = ReadFloat("ESP", "arrowSize", Vars::ESP::arrowSize, f);
         Vars::ESP::boxes = ReadBool("ESP", "boxes", Vars::ESP::boxes, f);
         Vars::ESP::boxStyle = ReadInt("ESP", "boxStyle", Vars::ESP::boxStyle, f);
         Vars::ESP::boxFill = ReadBool("ESP", "boxFill", Vars::ESP::boxFill, f);

@@ -77,31 +77,31 @@ namespace Visuals {
             RBX::Vec2 screenPos = W2S::WorldToScreen(plr.position, viewMatrix);
 
             if (Vars::ESP::offScreenArrows) {
-                bool isOffScreen = (screenPos.X <= 0 || screenPos.Y <= 0 || screenPos.X >= screenSize.x || screenPos.Y >= screenSize.y || screenPos.X == 0);
+                float clipX = plr.position.X * viewMatrix.data[0] + plr.position.Y * viewMatrix.data[4] + plr.position.Z * viewMatrix.data[8] + viewMatrix.data[12];
+                float clipY = plr.position.X * viewMatrix.data[1] + plr.position.Y * viewMatrix.data[5] + plr.position.Z * viewMatrix.data[9] + viewMatrix.data[13];
+                float clipW = plr.position.X * viewMatrix.data[3] + plr.position.Y * viewMatrix.data[7] + plr.position.Z * viewMatrix.data[11] + viewMatrix.data[15];
+
+                bool isOffScreen = (screenPos.X <= 0 || screenPos.Y <= 0 || screenPos.X >= screenSize.x || screenPos.Y >= screenSize.y || clipW < 0.1f);
 
                 if (isOffScreen) {
-                    RBX::Vec3 rightVec = PlayerCache::localPlayerCFrame.GetRightVector();
-                    RBX::Vec3 lookVec = PlayerCache::localPlayerCFrame.GetLookVector();
+                    if (clipW < 0.1f) {
+                        clipX *= -1.0f;
+                        clipY *= -1.0f;
+                    }
 
-                    float dx = plr.position.X - PlayerCache::localPlayerPos.X;
-                    float dy = plr.position.Y - PlayerCache::localPlayerPos.Y;
-                    float dz = plr.position.Z - PlayerCache::localPlayerPos.Z;
-
-                    float relX = (dx * rightVec.X) + (dy * rightVec.Y) + (dz * rightVec.Z);
-                    float relZ = (dx * lookVec.X) + (dy * lookVec.Y) + (dz * lookVec.Z);
-
-                    float screenAngle = atan2f(relZ, relX);
-
+                    float angle = atan2f(-clipY, clipX);
                     float radius = Vars::ESP::arrowRadius;
                     float arrSize = Vars::ESP::arrowSize;
+                    float arrWidth = arrSize * 0.6f;
 
-                    ImVec2 p1 = ImVec2(screenCenter.x + cosf(screenAngle) * radius, screenCenter.y - sinf(screenAngle) * radius);
+                    ImVec2 p1 = ImVec2(screenCenter.x + cosf(angle) * radius, screenCenter.y + sinf(angle) * radius);
 
-                    // [FIXED] Explicit float conversion for 3.14159 (Pi)
-                    float angleBack = screenAngle + 3.1415926535f;
+                    ImVec2 dir = ImVec2(cosf(angle), sinf(angle));
+                    ImVec2 norm = ImVec2(-sinf(angle), cosf(angle));
 
-                    ImVec2 p2 = ImVec2(p1.x + cosf(angleBack - 0.5f) * arrSize, p1.y - sinf(angleBack - 0.5f) * arrSize);
-                    ImVec2 p3 = ImVec2(p1.x + cosf(angleBack + 0.5f) * arrSize, p1.y - sinf(angleBack + 0.5f) * arrSize);
+                    ImVec2 base = ImVec2(p1.x - dir.x * arrSize, p1.y - dir.y * arrSize);
+                    ImVec2 p2 = ImVec2(base.x - norm.x * arrWidth, base.y - norm.y * arrWidth);
+                    ImVec2 p3 = ImVec2(base.x + norm.x * arrWidth, base.y + norm.y * arrWidth);
 
                     drawList->AddTriangleFilled(p1, p2, p3, arrCol);
                     drawList->AddTriangle(p1, p2, p3, IM_COL32(0, 0, 0, 255), 1.5f);
@@ -114,9 +114,9 @@ namespace Visuals {
                 auto headPos = head.GetPos();
 
                 RBX::Vec3 endPos = {
-                    headPos.X - lookVec.X * Vars::ESP::viewAngleLength,
-                    headPos.Y - lookVec.Y * Vars::ESP::viewAngleLength,
-                    headPos.Z - lookVec.Z * Vars::ESP::viewAngleLength
+                    headPos.X + lookVec.X * Vars::ESP::viewAngleLength,
+                    headPos.Y + lookVec.Y * Vars::ESP::viewAngleLength,
+                    headPos.Z + lookVec.Z * Vars::ESP::viewAngleLength
                 };
 
                 RBX::Vec2 head2D = W2S::WorldToScreen(headPos, viewMatrix);
@@ -275,21 +275,22 @@ namespace Visuals {
                     }
                 }
 
-                const float handW = 0.8f, handH = 0.8f, handD = 0.8f;
+                // [FIXED] Replaced handW with armW for R15 Arms
+                const float armW = 0.8f, armH = 0.8f, armD = 0.8f;
                 if (rightArm.Addr != 0) {
-                    auto handCF = rightArm.GetCFrame();
-                    auto handPos = handCF.GetPosition();
-                    auto handRight = handCF.GetRightVector();
-                    auto handUp = handCF.GetUpVector();
-                    auto handLook = handCF.GetLookVector();
+                    auto armCF = rightArm.GetCFrame();
+                    auto armPos = armCF.GetPosition();
+                    auto armRight = armCF.GetRightVector();
+                    auto armUp = armCF.GetUpVector();
+                    auto armLook = armCF.GetLookVector();
 
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
                                 boundPoints[boundPointCount++] = {
-                                    handPos.X + handRight.X * (x * handW * 0.5f) + handUp.X * (y * handH * 0.5f) + handLook.X * (z * handD * 0.5f),
-                                    handPos.Y + handRight.Y * (x * handW * 0.5f) + handUp.Y * (y * handH * 0.5f) + handLook.Y * (z * handD * 0.5f),
-                                    handPos.Z + handRight.Z * (x * handW * 0.5f) + handUp.Z * (y * handH * 0.5f) + handLook.Z * (z * handD * 0.5f)
+                                    armPos.X + armRight.X * (x * armW * 0.5f) + armUp.X * (y * armH * 0.5f) + armLook.X * (z * armD * 0.5f),
+                                    armPos.Y + armRight.Y * (x * armW * 0.5f) + armUp.Y * (y * armH * 0.5f) + armLook.Y * (z * armD * 0.5f),
+                                    armPos.Z + armRight.Z * (x * armW * 0.5f) + armUp.Z * (y * armH * 0.5f) + armLook.Z * (z * armD * 0.5f)
                                 };
                             }
                         }
@@ -297,40 +298,41 @@ namespace Visuals {
                 }
 
                 if (leftArm.Addr != 0) {
-                    auto handCF = leftArm.GetCFrame();
-                    auto handPos = handCF.GetPosition();
-                    auto handRight = handCF.GetRightVector();
-                    auto handUp = handCF.GetUpVector();
-                    auto handLook = handCF.GetLookVector();
+                    auto armCF = leftArm.GetCFrame();
+                    auto armPos = armCF.GetPosition();
+                    auto armRight = armCF.GetRightVector();
+                    auto armUp = armCF.GetUpVector();
+                    auto armLook = armCF.GetLookVector();
 
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
                                 boundPoints[boundPointCount++] = {
-                                    handPos.X + handRight.X * (x * handW * 0.5f) + handUp.X * (y * handH * 0.5f) + handLook.X * (z * handD * 0.5f),
-                                    handPos.Y + handRight.Y * (x * handW * 0.5f) + handUp.Y * (y * handH * 0.5f) + handLook.Y * (z * handD * 0.5f),
-                                    handPos.Z + handRight.Z * (x * handW * 0.5f) + handUp.Z * (y * handH * 0.5f) + handLook.Z * (z * handD * 0.5f)
+                                    armPos.X + armRight.X * (x * armW * 0.5f) + armUp.X * (y * armH * 0.5f) + armLook.X * (z * armD * 0.5f),
+                                    armPos.Y + armRight.Y * (x * armW * 0.5f) + armUp.Y * (y * armH * 0.5f) + armLook.Y * (z * armD * 0.5f),
+                                    armPos.Z + armRight.Z * (x * armW * 0.5f) + armUp.Z * (y * armH * 0.5f) + armLook.Z * (z * armD * 0.5f)
                                 };
                             }
                         }
                     }
                 }
 
-                const float footW = 0.8f, footH = 0.7f, footD = 1.2f;
+                // [FIXED] Replaced footW with legW for R15 Legs
+                const float legW = 0.8f, legH = 0.7f, legD = 1.2f;
                 if (rightLeg.Addr != 0) {
-                    auto footCF = rightLeg.GetCFrame();
-                    auto footPos = footCF.GetPosition();
-                    auto footRight = footCF.GetRightVector();
-                    auto footUp = footCF.GetUpVector();
-                    auto footLook = footCF.GetLookVector();
+                    auto legCF = rightLeg.GetCFrame();
+                    auto legPos = legCF.GetPosition();
+                    auto legRight = legCF.GetRightVector();
+                    auto legUp = legCF.GetUpVector();
+                    auto legLook = legCF.GetLookVector();
 
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
                                 boundPoints[boundPointCount++] = {
-                                    footPos.X + footRight.X * (x * footW * 0.5f) + footUp.X * (y * footH * 0.5f) + footLook.X * (z * footD * 0.5f),
-                                    footPos.Y + footRight.Y * (x * footW * 0.5f) + footUp.Y * (y * footH * 0.5f) + footLook.Y * (z * footD * 0.5f),
-                                    footPos.Z + footRight.Z * (x * footW * 0.5f) + footUp.Z * (y * footH * 0.5f) + footLook.Z * (z * footD * 0.5f)
+                                    legPos.X + legRight.X * (x * legW * 0.5f) + legUp.X * (y * legH * 0.5f) + legLook.X * (z * legD * 0.5f),
+                                    legPos.Y + legRight.Y * (x * legW * 0.5f) + legUp.Y * (y * legH * 0.5f) + legLook.Y * (z * legD * 0.5f),
+                                    legPos.Z + legRight.Z * (x * legW * 0.5f) + legUp.Z * (y * legH * 0.5f) + legLook.Z * (z * legD * 0.5f)
                                 };
                             }
                         }
@@ -338,19 +340,19 @@ namespace Visuals {
                 }
 
                 if (leftLeg.Addr != 0) {
-                    auto footCF = leftLeg.GetCFrame();
-                    auto footPos = footCF.GetPosition();
-                    auto footRight = footCF.GetRightVector();
-                    auto footUp = footCF.GetUpVector();
-                    auto footLook = footCF.GetLookVector();
+                    auto legCF = leftLeg.GetCFrame();
+                    auto legPos = legCF.GetPosition();
+                    auto legRight = legCF.GetRightVector();
+                    auto legUp = legCF.GetUpVector();
+                    auto legLook = legCF.GetLookVector();
 
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
                                 boundPoints[boundPointCount++] = {
-                                    footPos.X + footRight.X * (x * footW * 0.5f) + footUp.X * (y * footH * 0.5f) + footLook.X * (z * footD * 0.5f),
-                                    footPos.Y + footRight.Y * (x * footW * 0.5f) + footUp.Y * (y * footH * 0.5f) + footLook.Y * (z * footD * 0.5f),
-                                    footPos.Z + footRight.Z * (x * footW * 0.5f) + footUp.Z * (y * footH * 0.5f) + footLook.Z * (z * footD * 0.5f)
+                                    legPos.X + legRight.X * (x * legW * 0.5f) + legUp.X * (y * legH * 0.5f) + legLook.X * (z * legD * 0.5f),
+                                    legPos.Y + legRight.Y * (x * legW * 0.5f) + legUp.Y * (y * legH * 0.5f) + legLook.Y * (z * legD * 0.5f),
+                                    legPos.Z + legRight.Z * (x * legW * 0.5f) + legUp.Z * (y * legH * 0.5f) + legLook.Z * (z * legD * 0.5f)
                                 };
                             }
                         }
@@ -363,12 +365,12 @@ namespace Visuals {
             int validPoints = 0;
 
             for (int i = 0; i < boundPointCount; i++) {
-                RBX::Vec2 screenPos = W2S::WorldToScreen(boundPoints[i], viewMatrix);
-                if (screenPos.X != 0 || screenPos.Y != 0) {
-                    minX = (std::min)(minX, screenPos.X);
-                    minY = (std::min)(minY, screenPos.Y);
-                    maxX = (std::max)(maxX, screenPos.X);
-                    maxY = (std::max)(maxY, screenPos.Y);
+                RBX::Vec2 screenPosBound = W2S::WorldToScreen(boundPoints[i], viewMatrix);
+                if (screenPosBound.X != 0 || screenPosBound.Y != 0) {
+                    minX = (std::min)(minX, screenPosBound.X);
+                    minY = (std::min)(minY, screenPosBound.Y);
+                    maxX = (std::max)(maxX, screenPosBound.X);
+                    maxY = (std::max)(maxY, screenPosBound.Y);
                     validPoints++;
                 }
             }
@@ -489,6 +491,19 @@ namespace Visuals {
                 else if (Vars::ESP::snaplinePos == 2) startPos = ImVec2(screenSize.x / 2.0f, 0.0f);
 
                 drawList->AddLine(startPos, ImVec2((minX + maxX) / 2.0f, maxY), snapCol, 1.0f);
+            }
+        }
+
+        if (Vars::ESP::items) {
+            ImU32 itemColor = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::itemColor[0], Vars::ESP::itemColor[1], Vars::ESP::itemColor[2], Vars::ESP::itemColor[3]));
+
+            for (auto& item : PlayerCache::items) {
+                RBX::Vec2 screenPos = W2S::WorldToScreen(item.position, viewMatrix);
+                if (screenPos.X != 0 && screenPos.Y != 0) {
+                    std::string text = item.name + " [" + std::to_string((int)item.distance) + "m]";
+                    ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+                    DrawOutlinedText(drawList, ImVec2(screenPos.X - (textSize.x / 2), screenPos.Y), text, itemColor, Vars::ESP::textBackground);
+                }
             }
         }
     }

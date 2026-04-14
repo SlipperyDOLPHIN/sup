@@ -22,29 +22,33 @@ std::atomic<bool> running(true);
 
 void LocalPlayerThread() {
     while (running) {
-        if (Globals::camera.Addr != 0 && Vars::Local::fovChangerEnabled) {
-            Coms->WriteMemory<float>(Globals::camera.Addr + offsets::FOV, Vars::Local::cameraFOV);
-        }
+        try {
+            if (Globals::camera.Addr != 0 && Vars::Local::fovChangerEnabled) {
+                Coms->WriteMemory<float>(Globals::camera.Addr + offsets::FOV, Vars::Local::cameraFOV);
+            }
 
-        auto character = Globals::localPlayer.GetModelRef();
-        if (character.Addr == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            continue;
-        }
+            auto character = Globals::localPlayer.GetModelRef();
+            if (character.Addr == 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                continue;
+            }
 
-        auto humanoid = character.FindChildByClass("Humanoid");
-        if (humanoid.Addr == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            continue;
-        }
+            auto humanoid = character.FindChildByClass("Humanoid");
+            if (humanoid.Addr == 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                continue;
+            }
 
-        if (Vars::Local::speedEnabled) {
-            RBX::ModifyWalkSpeed(humanoid, Vars::Local::walkSpeed);
-        }
+            if (Vars::Local::speedEnabled) {
+                RBX::ModifyWalkSpeed(humanoid, Vars::Local::walkSpeed);
+            }
 
-        if (Vars::Local::jumpEnabled) {
-            RBX::ModifyJumpPower(humanoid, Vars::Local::jumpPower);
+            if (Vars::Local::jumpEnabled) {
+                RBX::ModifyJumpPower(humanoid, Vars::Local::jumpPower);
+            }
+
         }
+        catch (...) {}
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -131,18 +135,19 @@ int main() {
             SetWindowDisplayAffinity(overlay.GetWindowHandle(), WDA_NONE);
         }
 
-        static int frameCounter = 0;
-        if (frameCounter % 3 == 0) {
-            PlayerCache::UpdatePlayers();
+        try {
+            static int frameCounter = 0;
+            if (frameCounter % 3 == 0) {
+                PlayerCache::UpdatePlayers();
+            }
+            frameCounter++;
         }
-        frameCounter++;
+        catch (...) {}
 
         auto viewMatrix = Globals::renderEngine.GetViewMat();
 
         overlay.BeginFrame();
-
-        // Zero arguments required!
-        overlay.RenderMenu();
+        overlay.RenderMenu(viewMatrix);
 
         ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
@@ -177,18 +182,27 @@ int main() {
             drawList->AddText(textPos, IM_COL32(240, 240, 240, 255), watermark.c_str());
         }
 
-        if (Vars::Aimbot::enabled && Vars::Aimbot::showFOV) {
-            ImU32 fovCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::Aimbot::fovColor[0], Vars::Aimbot::fovColor[1], Vars::Aimbot::fovColor[2], Vars::Aimbot::fovColor[3]));
-            POINT p;
-            GetCursorPos(&p);
-            ImVec2 center = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
-            drawList->AddCircle(center, Vars::Aimbot::fovRadius, IM_COL32(0, 0, 0, 255), 64, Vars::Aimbot::fovThickness + 1.5f);
-            drawList->AddCircle(center, Vars::Aimbot::fovRadius, fovCol, 64, Vars::Aimbot::fovThickness);
+        float dynamicRadius = Vars::Aimbot::fovRadius;
+        if (Vars::Aimbot::dynamicFOV) {
+            float fovScale = viewMatrix.data[5];
+            if (fovScale > 0.1f) dynamicRadius = Vars::Aimbot::fovRadius * (1.0f / fovScale);
         }
 
-        Aimbot::RunTriggerBot(viewMatrix);
-        Aimbot::RunAimbot(viewMatrix, drawList);
-        Visuals::RenderESP(drawList, viewMatrix);
+        if (Vars::Aimbot::enabled && Vars::Aimbot::showFOV) {
+            ImU32 fovCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::Aimbot::fovColor[0], Vars::Aimbot::fovColor[1], Vars::Aimbot::fovColor[2], Vars::Aimbot::fovColor[3]));
+            POINT p; GetCursorPos(&p);
+            ImVec2 center = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
+            drawList->AddCircle(center, dynamicRadius, IM_COL32(0, 0, 0, 255), 64, Vars::Aimbot::fovThickness + 1.5f);
+            drawList->AddCircle(center, dynamicRadius, fovCol, 64, Vars::Aimbot::fovThickness);
+        }
+
+        try {
+            Aimbot::RunAutoClicker();
+            Aimbot::RunTriggerBot(viewMatrix);
+            Aimbot::RunAimbot(viewMatrix, drawList, dynamicRadius);
+            Visuals::RenderESP(drawList, viewMatrix);
+        }
+        catch (...) {}
 
         overlay.EndFrame();
     }

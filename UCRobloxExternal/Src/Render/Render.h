@@ -19,78 +19,80 @@
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT CALLBACK OverlayWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-        return true;
-
-    if (msg == WM_DESTROY) {
-        PostQuitMessage(0);
-        return 0;
-    }
-
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) return true;
+    if (msg == WM_DESTROY) { PostQuitMessage(0); return 0; }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-// [NEW] Premium Fade-In/Out Notification System
-struct Notification {
-    std::string text;
-    float lifespan;
-    float maxLifespan;
-    ImVec4 color;
-};
+inline std::string GetKeyName(int vk) {
+    if (vk == 0) return "[None]";
+    if (vk == VK_LBUTTON) return "[L-Mouse]";
+    if (vk == VK_RBUTTON) return "[R-Mouse]";
+    if (vk == VK_MBUTTON) return "[M-Mouse]";
+    if (vk == VK_XBUTTON1) return "[Mouse4]";
+    if (vk == VK_XBUTTON2) return "[Mouse5]";
+    if (vk == VK_SHIFT) return "[Shift]";
+    if (vk == VK_CONTROL) return "[Ctrl]";
+    if (vk == VK_MENU) return "[Alt]";
+    char name[128];
+    UINT scanCode = MapVirtualKey(vk, MAPVK_VK_TO_VSC);
+    int result = GetKeyNameTextA(scanCode << 16, name, 128);
+    if (result == 0) return "[Key " + std::to_string(vk) + "]";
+    return std::string("[") + name + "]";
+}
+
+inline void HotkeyButton(const char* label, int* key, bool& isWaiting) {
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    if (ImGui::Button(isWaiting ? "[Press Any Key]" : GetKeyName(*key).c_str(), ImVec2(100, 25))) {
+        isWaiting = true;
+    }
+    if (isWaiting) {
+        for (int i = 1; i < 255; i++) {
+            if (i == VK_LWIN || i == VK_RWIN) continue;
+            if (GetAsyncKeyState(i) & 0x8000) {
+                *key = (i == VK_ESCAPE) ? 0 : i;
+                isWaiting = false;
+                break;
+            }
+        }
+    }
+}
+
+struct Notification { std::string text; float lifespan; float maxLifespan; ImVec4 color; };
 
 namespace Notify {
     inline std::vector<Notification> list;
-
     inline void Add(const std::string& text, ImVec4 color = ImVec4(0.4f, 0.8f, 0.4f, 1.0f), float duration = 3.0f) {
         list.push_back({ text, duration, duration, color });
     }
-
     inline void Render() {
         if (list.empty()) return;
-
         ImVec2 screenSize = ImGui::GetIO().DisplaySize;
-        float currentY = screenSize.y - 20.0f; // Start drawing near the bottom right
+        float currentY = screenSize.y - 20.0f;
 
         for (size_t i = 0; i < list.size(); ) {
             auto& notif = list[i];
             notif.lifespan -= ImGui::GetIO().DeltaTime;
+            if (notif.lifespan <= 0.0f) { list.erase(list.begin() + i); continue; }
 
-            if (notif.lifespan <= 0.0f) {
-                list.erase(list.begin() + i);
-                continue; // Do not increment i, vector shifted
-            }
-
-            // Calculate smooth fade in and fade out alpha
             float alpha = 1.0f;
-            if (notif.lifespan < 0.5f) {
-                alpha = notif.lifespan / 0.5f;
-            }
-            else if (notif.maxLifespan - notif.lifespan < 0.2f) {
-                alpha = (notif.maxLifespan - notif.lifespan) / 0.2f;
-            }
+            if (notif.lifespan < 0.5f) alpha = notif.lifespan / 0.5f;
+            else if (notif.maxLifespan - notif.lifespan < 0.2f) alpha = (notif.maxLifespan - notif.lifespan) / 0.2f;
 
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
-
-            // Set dynamic position to avoid overlapping
             ImGui::SetNextWindowPos(ImVec2(screenSize.x - 20.0f, currentY), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.08f, 0.09f, 0.95f));
             ImGui::PushStyleColor(ImGuiCol_Border, notif.color);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
 
             std::string windowId = "##notif_" + std::to_string(i);
-            if (ImGui::Begin(windowId.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing)) {
-                ImGui::TextColored(notif.color, "[!]");
-                ImGui::SameLine();
-                ImGui::Text(notif.text.c_str());
-
-                // Offset the Y position upwards for the next notification
+            if (ImGui::Begin(windowId.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav)) {
+                ImGui::TextColored(notif.color, "[!]"); ImGui::SameLine(); ImGui::Text(notif.text.c_str());
                 currentY -= ImGui::GetWindowHeight() + 10.0f;
             }
             ImGui::End();
-
-            ImGui::PopStyleVar(2);
-            ImGui::PopStyleColor(2);
-
+            ImGui::PopStyleVar(2); ImGui::PopStyleColor(2);
             i++;
         }
     }
@@ -100,7 +102,6 @@ class OverlayWindow {
 private:
     HWND windowHandle;
     WNDCLASSEXW windowClass;
-
     ID3D11Device* d3dDevice;
     ID3D11DeviceContext* d3dContext;
     IDXGISwapChain* swapChain;
@@ -114,7 +115,6 @@ private:
         sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         sd.OutputWindow = hwnd;
         sd.SampleDesc.Count = 1;
-
         sd.Windowed = TRUE;
         sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
         sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
@@ -147,7 +147,6 @@ private:
     void CleanupD3D11() {
         if (renderTarget) { renderTarget->Release(); renderTarget = nullptr; }
         if (swapChain) { swapChain->Release(); swapChain = nullptr; }
-
         if (d3dContext) { d3dContext->Release(); d3dContext = nullptr; }
         if (d3dDevice) { d3dDevice->Release(); d3dDevice = nullptr; }
     }
@@ -163,11 +162,9 @@ public:
         windowClass.style = CS_HREDRAW | CS_VREDRAW;
         windowClass.lpfnWndProc = OverlayWndProc;
         windowClass.hInstance = GetModuleHandleW(nullptr);
-
         windowClass.lpszClassName = L"Roblox External";
 
-        if (!RegisterClassExW(&windowClass))
-            return false;
+        if (!RegisterClassExW(&windowClass)) return false;
 
         int screenW = GetSystemMetrics(SM_CXSCREEN);
         int screenH = GetSystemMetrics(SM_CYSCREEN);
@@ -179,11 +176,9 @@ public:
             nullptr, nullptr, windowClass.hInstance, nullptr
         );
 
-        if (!windowHandle)
-            return false;
+        if (!windowHandle) return false;
 
         SetLayeredWindowAttributes(windowHandle, RGB(0, 0, 0), 255, LWA_ALPHA);
-
         MARGINS margins = { -1, -1, -1, -1 };
         DwmExtendFrameIntoClientArea(windowHandle, &margins);
 
@@ -253,7 +248,7 @@ public:
         ImGui::NewFrame();
     }
 
-    void RenderMenu() {
+    void RenderMenu(const RBX::Mat4& viewMatrix) {
 
         if (Vars::Radar::enabled) {
             ImGui::SetNextWindowPos(ImVec2(20, 300), ImGuiCond_FirstUseEver);
@@ -317,6 +312,31 @@ public:
             ImGui::PopStyleColor();
         }
 
+        if (Vars::showPlayerList) {
+            ImGui::SetNextWindowSize(ImVec2(280, 400), ImGuiCond_FirstUseEver);
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.08f, 0.09f, 0.85f));
+            if (ImGui::Begin("ESP Player List", &Vars::showPlayerList, ImGuiWindowFlags_NoCollapse)) {
+                ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 1.0f), "Players Tracked: %d", PlayerCache::players.size());
+                ImGui::Separator();
+                if (ImGui::BeginTable("player_table", 3, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_ScrollY)) {
+                    ImGui::TableSetupColumn("Name");
+                    ImGui::TableSetupColumn("HP", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+                    ImGui::TableSetupColumn("Dist", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+                    ImGui::TableHeadersRow();
+                    for (auto& plr : PlayerCache::players) {
+                        if (!plr.isValid || plr.isNPC) continue;
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn(); ImGui::Text("%s", plr.name.c_str());
+                        ImGui::TableNextColumn(); ImGui::Text("%.0f", plr.health);
+                        ImGui::TableNextColumn(); ImGui::Text("%.0fm", plr.distance);
+                    }
+                    ImGui::EndTable();
+                }
+            }
+            ImGui::End();
+            ImGui::PopStyleColor();
+        }
+
         if (Vars::showHUD) {
             ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
             ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.11f, 0.7f));
@@ -324,7 +344,7 @@ public:
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
 
             if (ImGui::Begin("Status HUD", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar)) {
-                ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.95f, 1.0f), "HUD");
+                ImGui::TextColored(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), "Orange External");
                 ImGui::Separator();
 
                 if (Vars::Aimbot::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Aimbot Active");
@@ -333,12 +353,13 @@ public:
                 }
 
                 if (Vars::TriggerBot::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] TriggerBot Active");
+                if (Vars::AutoClicker::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] AutoClicker Active");
                 if (Vars::ESP::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] ESP Active");
                 if (Vars::Local::speedEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] WalkSpeed [%.0f]", Vars::Local::walkSpeed);
                 if (Vars::Local::fovChangerEnabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Custom FOV [%.0f]", Vars::Local::cameraFOV);
                 if (Vars::Misc::streamProof) ImGui::TextColored(ImVec4(0.6f, 0.4f, 1.0f, 1.0f), "[+] Stream Proof Active");
 
-                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled && !Vars::TriggerBot::enabled && !Vars::Misc::streamProof) {
+                if (!Vars::Aimbot::enabled && !Vars::ESP::enabled && !Vars::Local::speedEnabled && !Vars::Local::fovChangerEnabled && !Vars::TriggerBot::enabled && !Vars::Misc::streamProof && !Vars::AutoClicker::enabled) {
                     ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Idle...");
                 }
             }
@@ -348,95 +369,75 @@ public:
         }
 
         if (!Vars::menuOpen) {
-            Notify::Render(); // Ensure notifications draw even if menu is closed
+            Notify::Render();
             return;
         }
 
         ImGui::SetNextWindowSize(ImVec2(700, 560), ImGuiCond_FirstUseEver);
-        ImGui::Begin("HUD", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("dolphin.club | EX", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
 
-        ImGui::SetCursorPosX(15);
         ImVec2 buttonSize(130, 40);
-
-        if (Vars::selectedTab == 0) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
-            if (ImGui::Button("Aimbot", buttonSize)) Vars::selectedTab = 0;
-            ImGui::PopStyleColor(2);
-        }
-        else {
-            if (ImGui::Button("Aimbot", buttonSize)) Vars::selectedTab = 0;
-        }
-
-        ImGui::SetCursorPosX(15);
-        if (Vars::selectedTab == 1) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
-            if (ImGui::Button("Visuals", buttonSize)) Vars::selectedTab = 1;
-            ImGui::PopStyleColor(2);
-        }
-        else {
-            if (ImGui::Button("Visuals", buttonSize)) Vars::selectedTab = 1;
-        }
-
-        ImGui::SetCursorPosX(15);
-        if (Vars::selectedTab == 2) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
-            if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
-            ImGui::PopStyleColor(2);
-        }
-        else {
-            if (ImGui::Button("Local", buttonSize)) Vars::selectedTab = 2;
-        }
-
-        ImGui::SetCursorPosX(15);
-        if (Vars::selectedTab == 3) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
-            if (ImGui::Button("Settings", buttonSize)) Vars::selectedTab = 3;
-            ImGui::PopStyleColor(2);
-        }
-        else {
-            if (ImGui::Button("Settings", buttonSize)) Vars::selectedTab = 3;
+        const char* tabs[] = { "Aimbot", "Visuals", "Local", "Settings" };
+        for (int i = 0; i < 4; i++) {
+            ImGui::SetCursorPosX(15);
+            if (Vars::selectedTab == i) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.6f, 0.95f, 1.0f));
+                if (ImGui::Button(tabs[i], buttonSize)) Vars::selectedTab = i;
+                ImGui::PopStyleColor(2);
+            }
+            else {
+                if (ImGui::Button(tabs[i], buttonSize)) Vars::selectedTab = i;
+            }
         }
 
         ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
-        ImGui::SetCursorPosX(15);
-        ImGui::Checkbox("Show HUD", &Vars::showHUD);
-        ImGui::SetCursorPosX(15);
-        ImGui::Checkbox("Watermark", &Vars::showWatermark);
+        ImGui::SetCursorPosX(15); ImGui::Checkbox("Show HUD", &Vars::showHUD);
+        ImGui::SetCursorPosX(15); ImGui::Checkbox("Watermark", &Vars::showWatermark);
+        ImGui::SetCursorPosX(15); ImGui::Checkbox("Player List", &Vars::showPlayerList);
 
         ImGui::EndChild();
-
         ImGui::SameLine();
-
         ImGui::BeginChild("Content", ImVec2(0, 0), true);
 
-        if (Vars::selectedTab == 0) {
-            ImGui::Text("Aimbot");
-            ImGui::Separator();
-            ImGui::Spacing();
+        static bool waitAim = false, waitTrig = false, waitClick = false;
 
+        if (Vars::selectedTab == 0) {
+            ImGui::Text("Aimbot"); ImGui::Separator(); ImGui::Spacing();
             ImGui::Checkbox("Enable Aimbot", &Vars::Aimbot::enabled);
             ImGui::Checkbox("Team Check", &Vars::Aimbot::teamCheck);
-            ImGui::Checkbox("Target NPCs/Bots", &Vars::Aimbot::targetNPCs);
+            ImGui::Checkbox("Target NPCs", &Vars::Aimbot::targetNPCs);
             ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
+            HotkeyButton("Aimbot Hotkey", &Vars::Aimbot::aimbotKey, waitAim);
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Velocity Prediction");
+            ImGui::Checkbox("Enable Prediction", &Vars::Aimbot::prediction);
+            if (Vars::Aimbot::prediction) ImGui::SliderFloat("Bullet Speed", &Vars::Aimbot::bulletSpeed, 100.0f, 3000.0f, "%.0f");
 
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "TriggerBot (Auto-Shoot)");
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "TriggerBot");
             ImGui::Checkbox("Enable TriggerBot", &Vars::TriggerBot::enabled);
+            HotkeyButton("Trigger Hotkey", &Vars::TriggerBot::triggerKey, waitTrig);
             if (Vars::TriggerBot::enabled) {
                 ImGui::SliderFloat("Hitbox Radius", &Vars::TriggerBot::triggerDistance, 5.0f, 50.0f, "%.1f px");
                 ImGui::SliderInt("Click Delay", &Vars::TriggerBot::clickDelay, 10, 500, "%d ms");
             }
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Auto-Clicker");
+            ImGui::Checkbox("Enable AutoClicker", &Vars::AutoClicker::enabled);
+            HotkeyButton("Clicker Hotkey", &Vars::AutoClicker::clickKey, waitClick);
+            if (Vars::AutoClicker::enabled) {
+                ImGui::SliderInt("Min CPS", &Vars::AutoClicker::minCPS, 1, 30);
+                ImGui::SliderInt("Max CPS", &Vars::AutoClicker::maxCPS, 1, 30);
+            }
 
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
             ImGui::Checkbox("Show FOV", &Vars::Aimbot::showFOV);
+            ImGui::SameLine(); ImGui::Checkbox("Dynamic Size", &Vars::Aimbot::dynamicFOV);
             if (Vars::Aimbot::showFOV) {
                 ImGui::ColorEdit4("FOV Color", Vars::Aimbot::fovColor, ImGuiColorEditFlags_NoInputs);
                 ImGui::SliderFloat("Thickness", &Vars::Aimbot::fovThickness, 1.0f, 5.0f, "%.1f");
@@ -444,7 +445,6 @@ public:
             }
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-
             ImGui::Text("Smoothing");
             ImGui::SliderFloat("##Smoothing", &Vars::Aimbot::smoothing, 1.0f, 20.0f, "%.1f");
 
@@ -457,36 +457,23 @@ public:
             ImGui::Text("Aim Target");
             const char* targets[] = { "Head", "HumanoidRootPart" };
             ImGui::Combo("##Target", &Vars::Aimbot::aimTarget, targets, 2);
-
-            ImGui::Spacing();
-            ImGui::Text("Aimbot Keybind");
-            const char* keys[] = { "None", "Left Mouse", "Right Mouse", "Middle Mouse", "X1 Mouse", "X2 Mouse",
-                                   "Shift", "Ctrl", "Alt", "C", "V", "X", "Z", "Q", "E", "R", "T", "F", "G" };
-            const int keyValues[] = { 0, 1, 2, 4, 5, 6, 16, 17, 18, 0x43, 0x56, 0x58, 0x5A, 0x51, 0x45, 0x52, 0x54, 0x46, 0x47 };
-
-            int currentKeyIndex = 0;
-            for (int i = 0; i < 19; i++) {
-                if (keyValues[i] == Vars::Aimbot::aimbotKey) {
-                    currentKeyIndex = i;
-                    break;
-                }
-            }
-
-            if (ImGui::Combo("##Keybind", &currentKeyIndex, keys, 19)) {
-                Vars::Aimbot::aimbotKey = keyValues[currentKeyIndex];
-            }
         }
         else if (Vars::selectedTab == 1) {
-            ImGui::Text("Visuals");
-            ImGui::Separator();
-            ImGui::Spacing();
-
+            ImGui::Text("Visuals"); ImGui::Separator(); ImGui::Spacing();
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
             ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
             ImGui::Checkbox("Show NPCs/Bots", &Vars::ESP::showNPCs);
-
             ImGui::Text("Max Render Distance");
             ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Loot & Items");
+            ImGui::Checkbox("Enable Item ESP", &Vars::ESP::items);
+            if (Vars::ESP::items) {
+                ImGui::SliderFloat("Max Dist", &Vars::ESP::maxItemDistance, 10.0f, 1000.0f, "%.0f");
+                ImGui::ColorEdit4("Color", Vars::ESP::itemColor, ImGuiColorEditFlags_NoInputs);
+            }
+
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
             ImGui::Columns(2, nullptr, false);
@@ -498,7 +485,7 @@ public:
             ImGui::Checkbox("View Tracers", &Vars::ESP::viewAngles);
             if (Vars::ESP::viewAngles) ImGui::ColorEdit4("Tracer Color", Vars::ESP::viewAngleColor, ImGuiColorEditFlags_NoInputs);
 
-            ImGui::Checkbox("Off-Screen Arrows", &Vars::ESP::offScreenArrows);
+            ImGui::Checkbox("Off-Screen Arrows (WIP)", &Vars::ESP::offScreenArrows);
             if (Vars::ESP::offScreenArrows) {
                 ImGui::SliderFloat("Arrow Rad", &Vars::ESP::arrowRadius, 50.0f, 400.0f, "%.0f");
                 ImGui::ColorEdit4("Arrow Color", Vars::ESP::arrowColor, ImGuiColorEditFlags_NoInputs);
@@ -509,6 +496,7 @@ public:
             ImGui::Checkbox("Boxes", &Vars::ESP::boxes);
             if (Vars::ESP::boxes) {
                 const char* boxStyles[] = { "Full Box", "Corner Box" };
+                // [FIXED] Explicit int cast to remove compiler warning
                 ImGui::Combo("##BoxStyle", &Vars::ESP::boxStyle, boxStyles, 2);
                 ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
                 ImGui::Checkbox("Box Fill", &Vars::ESP::boxFill);
@@ -544,6 +532,7 @@ public:
             ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
             if (Vars::ESP::snaplines) {
                 const char* linePos[] = { "Bottom", "Center", "Top" };
+                // [FIXED] Explicit int cast to remove compiler warning
                 ImGui::Combo("##LinePos", &Vars::ESP::snaplinePos, linePos, 3);
                 ImGui::ColorEdit4("Line Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
             }
@@ -569,10 +558,7 @@ public:
             ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 2) {
-            ImGui::Text("Local Player");
-            ImGui::Separator();
-            ImGui::Spacing();
-
+            ImGui::Text("Local Player"); ImGui::Separator(); ImGui::Spacing();
             ImGui::Checkbox("WalkSpeed", &Vars::Local::speedEnabled);
             ImGui::SliderFloat("##WalkSpeed", &Vars::Local::walkSpeed, 16.0f, 200.0f, "%.0f");
 
@@ -581,16 +567,40 @@ public:
             ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "%.0f");
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-
             ImGui::Text("Camera");
             ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
             ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
         }
         else if (Vars::selectedTab == 3) {
-            ImGui::Text("Settings & Config");
-            ImGui::Separator();
-            ImGui::Spacing();
+            ImGui::Text("Settings & Multi-Config"); ImGui::Separator(); ImGui::Spacing();
 
+            if (ImGui::Button("Refresh Config List", ImVec2(180, 25))) { Config::RefreshConfigs(); Notify::Add("Configs Refreshed", ImVec4(0.4f, 0.8f, 1.0f, 1.0f)); }
+
+            if (Vars::Configs::list.empty()) Config::RefreshConfigs();
+
+            std::vector<const char*> configNames;
+            for (auto& s : Vars::Configs::list) configNames.push_back(s.c_str());
+
+            // [FIXED] Explicit int cast to fix standard library conversion warning
+            ImGui::Combo("##ConfigList", &Vars::Configs::selectedIndex, configNames.data(), static_cast<int>(configNames.size()));
+
+            if (ImGui::Button("Load Selected", ImVec2(100, 30))) { Config::Load(); Notify::Add("Config Loaded!", ImVec4(1.0f, 0.8f, 0.2f, 1.0f)); }
+            ImGui::SameLine();
+            if (ImGui::Button("Save Selected", ImVec2(100, 30))) { Config::Save(); Notify::Add("Config Overwritten!", ImVec4(0.4f, 1.0f, 0.4f, 1.0f)); }
+
+            ImGui::Spacing();
+            ImGui::InputText("##NewName", Vars::Configs::newConfigName, 64);
+            if (ImGui::Button("Create New File", ImVec2(120, 30))) {
+                std::string fname(Vars::Configs::newConfigName);
+                if (fname.length() > 0) {
+                    if (fname.find(".ini") == std::string::npos) fname += ".ini";
+                    Config::Save(fname);
+                    Vars::Configs::newConfigName[0] = '\0';
+                    Notify::Add("New Config Created!", ImVec4(0.2f, 1.0f, 0.8f, 1.0f));
+                }
+            }
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
             ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Core Systems");
             if (ImGui::Button("Force Refresh Cache", ImVec2(180, 30))) {
                 Vars::Misc::forceRefresh = true;
@@ -598,48 +608,25 @@ public:
             }
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use this if ESP freezes or you teleport/die and players stop updating.");
 
-            if (ImGui::Button("Panic / Exit Cheat", ImVec2(180, 30))) {
-                Vars::Misc::exitCheat = true;
-            }
+            if (ImGui::Button("Panic / Exit Cheat", ImVec2(180, 30))) { Vars::Misc::exitCheat = true; }
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "p100 Features");
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[p100 Features");
             ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);
-            if (ImGui::IsItemHovered()) {
-                ImGui::SetTooltip("Hides the cheat overlay from screen recording software (OBS, Discord, etc.)");
-            }
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-
-            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Save and load your preferred settings.");
-            ImGui::Spacing(); ImGui::Spacing();
-
-            if (ImGui::Button("Save Config", ImVec2(140, 40))) {
-                Config::Save();
-                Notify::Add("Configuration Saved!", ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Load Config", ImVec2(140, 40))) {
-                Config::Load();
-                Notify::Add("Configuration Loaded!", ImVec4(1.0f, 0.8f, 0.2f, 1.0f));
-            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hides the cheat overlay from screen recording software (OBS, Discord, etc.)");
         }
 
         ImGui::EndChild();
         ImGui::End();
-
-        // Render notifications over the menu if it's open
         Notify::Render();
     }
 
     void EndFrame() {
         ImGui::Render();
-
         float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
         d3dContext->OMSetRenderTargets(1, &renderTarget, nullptr);
         d3dContext->ClearRenderTargetView(renderTarget, clearColor);
-
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
         swapChain->Present(0, 0);
     }
@@ -648,14 +635,8 @@ public:
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
-
         CleanupD3D11();
-
-        if (windowHandle) {
-            DestroyWindow(windowHandle);
-            windowHandle = nullptr;
-        }
-
+        if (windowHandle) { DestroyWindow(windowHandle); windowHandle = nullptr; }
         UnregisterClassW(windowClass.lpszClassName, windowClass.hInstance);
     }
 
