@@ -2,6 +2,9 @@
 #include <Windows.h>
 #include <d3d11.h>
 #include <dwmapi.h>
+#include <vector>
+#include <string>
+#include <cmath>
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -9,7 +12,6 @@
 #include "../Core/Config/Config.h" 
 #include "../Core/Cache/Cache.h"         
 #include "../Core/Features/Aimbot/Aimbot.h" 
-#include <cmath>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -26,6 +28,72 @@ LRESULT CALLBACK OverlayWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     }
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+// [NEW] Premium Fade-In/Out Notification System
+struct Notification {
+    std::string text;
+    float lifespan;
+    float maxLifespan;
+    ImVec4 color;
+};
+
+namespace Notify {
+    inline std::vector<Notification> list;
+
+    inline void Add(const std::string& text, ImVec4 color = ImVec4(0.4f, 0.8f, 0.4f, 1.0f), float duration = 3.0f) {
+        list.push_back({ text, duration, duration, color });
+    }
+
+    inline void Render() {
+        if (list.empty()) return;
+
+        ImVec2 screenSize = ImGui::GetIO().DisplaySize;
+        float currentY = screenSize.y - 20.0f; // Start drawing near the bottom right
+
+        for (size_t i = 0; i < list.size(); ) {
+            auto& notif = list[i];
+            notif.lifespan -= ImGui::GetIO().DeltaTime;
+
+            if (notif.lifespan <= 0.0f) {
+                list.erase(list.begin() + i);
+                continue; // Do not increment i, vector shifted
+            }
+
+            // Calculate smooth fade in and fade out alpha
+            float alpha = 1.0f;
+            if (notif.lifespan < 0.5f) {
+                alpha = notif.lifespan / 0.5f;
+            }
+            else if (notif.maxLifespan - notif.lifespan < 0.2f) {
+                alpha = (notif.maxLifespan - notif.lifespan) / 0.2f;
+            }
+
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
+
+            // Set dynamic position to avoid overlapping
+            ImGui::SetNextWindowPos(ImVec2(screenSize.x - 20.0f, currentY), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.08f, 0.09f, 0.95f));
+            ImGui::PushStyleColor(ImGuiCol_Border, notif.color);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+
+            std::string windowId = "##notif_" + std::to_string(i);
+            if (ImGui::Begin(windowId.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing)) {
+                ImGui::TextColored(notif.color, "[!]");
+                ImGui::SameLine();
+                ImGui::Text(notif.text.c_str());
+
+                // Offset the Y position upwards for the next notification
+                currentY -= ImGui::GetWindowHeight() + 10.0f;
+            }
+            ImGui::End();
+
+            ImGui::PopStyleVar(2);
+            ImGui::PopStyleColor(2);
+
+            i++;
+        }
+    }
 }
 
 class OverlayWindow {
@@ -279,10 +347,13 @@ public:
             ImGui::PopStyleColor(2);
         }
 
-        if (!Vars::menuOpen) return;
+        if (!Vars::menuOpen) {
+            Notify::Render(); // Ensure notifications draw even if menu is closed
+            return;
+        }
 
         ImGui::SetNextWindowSize(ImVec2(700, 560), ImGuiCond_FirstUseEver);
-        ImGui::Begin("dolphin.club | EX", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("HUD", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
 
@@ -454,7 +525,7 @@ public:
 
             ImGui::Checkbox("Head Dot", &Vars::ESP::headDot);
             if (Vars::ESP::headDot) {
-                ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 1.0f, 5.0f, "%.1f");
+                ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 2.0f, 15.0f, "%.1f");
                 ImGui::ColorEdit4("Dot Color", Vars::ESP::headDotColor, ImGuiColorEditFlags_NoInputs);
             }
 
@@ -523,6 +594,7 @@ public:
             ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Core Systems");
             if (ImGui::Button("Force Refresh Cache", ImVec2(180, 30))) {
                 Vars::Misc::forceRefresh = true;
+                Notify::Add("Core Cache Refreshed!", ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
             }
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use this if ESP freezes or you teleport/die and players stop updating.");
 
@@ -532,7 +604,7 @@ public:
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "HUD");
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "p100 Features");
             ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);
             if (ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("Hides the cheat overlay from screen recording software (OBS, Discord, etc.)");
@@ -545,15 +617,20 @@ public:
 
             if (ImGui::Button("Save Config", ImVec2(140, 40))) {
                 Config::Save();
+                Notify::Add("Configuration Saved!", ImVec4(0.4f, 1.0f, 0.4f, 1.0f));
             }
             ImGui::SameLine();
             if (ImGui::Button("Load Config", ImVec2(140, 40))) {
                 Config::Load();
+                Notify::Add("Configuration Loaded!", ImVec4(1.0f, 0.8f, 0.2f, 1.0f));
             }
         }
 
         ImGui::EndChild();
         ImGui::End();
+
+        // Render notifications over the menu if it's open
+        Notify::Render();
     }
 
     void EndFrame() {
