@@ -7,8 +7,8 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "../Core/Vars/Vars.h"
 #include "../Core/Config/Config.h" 
-#include "../Core/Cache/Cache.h"         // [FIXED] Included for Radar PlayerCache access
-#include "../Core/Features/Aimbot/Aimbot.h" // [FIXED] Included for Radar Aimbot target highlighting
+#include "../Core/Cache/Cache.h"         
+#include "../Core/Features/Aimbot/Aimbot.h" 
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -182,48 +182,81 @@ public:
         ImGui::NewFrame();
     }
 
-    void RenderMenu() {
+    // [FIXED] Added const RBX::Mat4& viewMatrix parameter to match Main.cpp
+    void RenderMenu(const RBX::Mat4& viewMatrix) {
+
         // 2D RADAR WINDOW
         if (Vars::Radar::enabled) {
-            ImGui::SetNextWindowSize(ImVec2(Vars::Radar::size, Vars::Radar::size), ImGuiCond_FirstUseEver);
-            if (ImGui::Begin("2D Radar", &Vars::Radar::enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
-                ImVec2 p = ImGui::GetCursorScreenPos();
-                float s = Vars::Radar::size - 25;
-                ImVec2 center = ImVec2(p.x + s / 2.0f, p.y + s / 2.0f);
+            ImGui::SetNextWindowPos(ImVec2(20, 300), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(Vars::Radar::size, Vars::Radar::size));
 
-                drawList->AddRectFilled(p, ImVec2(p.x + s, p.y + s), IM_COL32(20, 20, 22, 240), 4.0f);
-                drawList->AddRect(p, ImVec2(p.x + s, p.y + s), IM_COL32(100, 150, 255, 255), 4.0f);
-                drawList->AddLine(ImVec2(center.x, p.y), ImVec2(center.x, p.y + s), IM_COL32(60, 60, 65, 255));
-                drawList->AddLine(ImVec2(p.x, center.y), ImVec2(p.x + s, center.y), IM_COL32(60, 60, 65, 255));
-                drawList->AddCircleFilled(center, 4.0f, IM_COL32(255, 255, 255, 255));
+            // Transparent floating window
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+            if (ImGui::Begin("RadarWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse)) {
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                ImVec2 p = ImGui::GetWindowPos();
+                float s = Vars::Radar::size;
+                float radius = s / 2.0f;
+                ImVec2 center = ImVec2(p.x + radius, p.y + radius);
+
+                drawList->AddCircleFilled(center, radius, IM_COL32(20, 20, 22, 220), 64);
+
+                // RGB Rainbow Outline for Radar
+                static float radarHue = 0.0f;
+                radarHue += 0.002f;
+                if (radarHue > 1.0f) radarHue -= 1.0f;
+                ImVec4 rgbColor;
+                ImGui::ColorConvertHSVtoRGB(radarHue, 0.8f, 0.9f, rgbColor.x, rgbColor.y, rgbColor.z);
+                rgbColor.w = 1.0f;
+
+                drawList->AddCircle(center, radius, ImGui::ColorConvertFloat4ToU32(rgbColor), 64, 3.0f);
+
+                drawList->AddLine(ImVec2(center.x, center.y - radius), ImVec2(center.x, center.y + radius), IM_COL32(60, 60, 65, 150));
+                drawList->AddLine(ImVec2(center.x - radius, center.y), ImVec2(center.x + radius, center.y), IM_COL32(60, 60, 65, 150));
+                drawList->AddCircleFilled(center, 3.0f, IM_COL32(255, 255, 255, 255));
+
+                RBX::Vec3 rightVec = PlayerCache::localPlayerCFrame.GetRightVector();
+                RBX::Vec3 lookVec = PlayerCache::localPlayerCFrame.GetLookVector();
 
                 for (auto& plr : PlayerCache::players) {
                     if (!plr.isValid) continue;
-                    if (plr.distance > Vars::Radar::range) continue;
                     if (plr.isNPC && !Vars::ESP::showNPCs) continue;
                     if (!plr.isNPC && Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
                     float dx = plr.position.X - PlayerCache::localPlayerPos.X;
+                    float dy = plr.position.Y - PlayerCache::localPlayerPos.Y;
                     float dz = plr.position.Z - PlayerCache::localPlayerPos.Z;
 
-                    float radarX = center.x + (dx / Vars::Radar::range) * (s / 2.0f);
-                    float radarY = center.y + (dz / Vars::Radar::range) * (s / 2.0f);
+                    float relX = (dx * rightVec.X) + (dy * rightVec.Y) + (dz * rightVec.Z);
+                    float relZ = (dx * lookVec.X) + (dy * lookVec.Y) + (dz * lookVec.Z);
 
-                    if (radarX < p.x) radarX = p.x;
-                    if (radarX > p.x + s) radarX = p.x + s;
-                    if (radarY < p.y) radarY = p.y;
-                    if (radarY > p.y + s) radarY = p.y + s;
+                    float rX = center.x + (relX / Vars::Radar::range) * radius;
+                    float rY = center.y + (relZ / Vars::Radar::range) * radius;
 
                     ImU32 blipCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::Radar::color[0], Vars::Radar::color[1], Vars::Radar::color[2], Vars::Radar::color[3]));
                     if (Vars::ESP::highlightTarget && plr.playerAddr == Aimbot::lockedPlayerAddr) {
                         blipCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::targetHighlightColor[0], Vars::ESP::targetHighlightColor[1], Vars::ESP::targetHighlightColor[2], Vars::ESP::targetHighlightColor[3]));
                     }
 
-                    drawList->AddCircleFilled(ImVec2(radarX, radarY), Vars::Radar::blipSize, blipCol);
+                    float distFromCenter = sqrt((rX - center.x) * (rX - center.x) + (rY - center.y) * (rY - center.y));
+
+                    if (distFromCenter < radius - Vars::Radar::blipSize) {
+                        drawList->AddCircleFilled(ImVec2(rX, rY), Vars::Radar::blipSize, blipCol);
+                    }
+                    else if (plr.distance <= Vars::Radar::range * 1.5f) {
+                        // Clamp to edge
+                        float angle = atan2(rY - center.y, rX - center.x);
+                        float clampX = center.x + cos(angle) * (radius - Vars::Radar::blipSize);
+                        float clampY = center.y + sin(angle) * (radius - Vars::Radar::blipSize);
+                        drawList->AddCircleFilled(ImVec2(clampX, clampY), Vars::Radar::blipSize, blipCol);
+                    }
                 }
             }
             ImGui::End();
+            ImGui::PopStyleVar(2);
+            ImGui::PopStyleColor();
         }
 
         // HUD OVERLAY
@@ -234,7 +267,7 @@ public:
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
 
             if (ImGui::Begin("Status HUD", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar)) {
-                ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.95f, 1.0f), "Premium External");
+                ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.95f, 1.0f), "HUD");
                 ImGui::Separator();
 
                 if (Vars::Aimbot::enabled) ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[+] Aimbot Active");
@@ -313,6 +346,8 @@ public:
         ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
         ImGui::SetCursorPosX(15);
         ImGui::Checkbox("Show HUD", &Vars::showHUD);
+        ImGui::SetCursorPosX(15);
+        ImGui::Checkbox("Watermark", &Vars::showWatermark);
 
         ImGui::EndChild();
 
@@ -399,8 +434,15 @@ public:
             ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Targeting Extras");
             ImGui::Checkbox("Target Highlight", &Vars::ESP::highlightTarget);
             if (Vars::ESP::highlightTarget) ImGui::ColorEdit4("Target Color", Vars::ESP::targetHighlightColor, ImGuiColorEditFlags_NoInputs);
+
             ImGui::Checkbox("View Tracers", &Vars::ESP::viewAngles);
             if (Vars::ESP::viewAngles) ImGui::ColorEdit4("Tracer Color", Vars::ESP::viewAngleColor, ImGuiColorEditFlags_NoInputs);
+
+            ImGui::Checkbox("Off-Screen Arrows", &Vars::ESP::offScreenArrows);
+            if (Vars::ESP::offScreenArrows) {
+                ImGui::SliderFloat("Arrow Rad", &Vars::ESP::arrowRadius, 50.0f, 400.0f, "%.0f");
+                ImGui::ColorEdit4("Arrow Color", Vars::ESP::arrowColor, ImGuiColorEditFlags_NoInputs);
+            }
 
             ImGui::Spacing(); ImGui::Spacing();
 
@@ -454,6 +496,7 @@ public:
             if (Vars::ESP::healthBar) {
                 ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText);
             }
+            ImGui::Checkbox("Text BG", &Vars::ESP::textBackground);
             ImGui::Spacing();
 
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
@@ -487,6 +530,18 @@ public:
             ImGui::Text("Settings & Config");
             ImGui::Separator();
             ImGui::Spacing();
+
+            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Core Systems");
+            if (ImGui::Button("Force Refresh Cache", ImVec2(180, 30))) {
+                Vars::Misc::forceRefresh = true;
+            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use this if ESP freezes or you teleport/die and players stop updating.");
+
+            if (ImGui::Button("Panic / Exit Cheat", ImVec2(180, 30))) {
+                Vars::Misc::exitCheat = true;
+            }
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
             ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Premium Features");
             ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);

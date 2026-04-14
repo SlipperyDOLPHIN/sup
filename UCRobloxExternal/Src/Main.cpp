@@ -76,23 +76,12 @@ int main() {
 
     Globals::dataModel = RBX::RbxInstance(dataModelPtr);
     Globals::renderEngine = RBX::RenderEngine(visualEngine);
-
     Globals::workspace = Globals::dataModel.FindChildByClass("Workspace");
     Globals::players = Globals::dataModel.FindChildByClass("Players");
     Globals::camera = Globals::workspace.FindChildByClass("Camera");
 
     auto localPlayerAddr = Coms->ReadMemory<uintptr_t>(Globals::players.Addr + offsets::LocalPlayer);
-
-    system("cls");
     Globals::localPlayer = RBX::RbxInstance(localPlayerAddr);
-
-    std::cout << "[+] DataModel: 0x" << std::hex << dataModelPtr << std::dec << "\n";
-    std::cout << "[+] VisualEngine: 0x" << std::hex << visualEngine << std::dec << "\n";
-    std::cout << "[+] Workspace: 0x" << std::hex << Globals::workspace.Addr << std::dec << "\n";
-    std::cout << "[+] Players: 0x" << std::hex << Globals::players.Addr << std::dec << "\n";
-
-    std::cout << "[+] Camera: 0x" << std::hex << Globals::camera.Addr << std::dec << "\n";
-    std::cout << "[+] LocalPlayer: 0x" << std::hex << localPlayerAddr << std::dec << "\n\n";
 
     OverlayWindow overlay;
     if (!overlay.Initialize()) {
@@ -107,9 +96,29 @@ int main() {
 
     while (Coms->IsConnected())
     {
-        if (!IsGameRunning(L"Roblox"))
-        {
+        if (!IsGameRunning(L"Roblox") || Vars::Misc::exitCheat) {
             break;
+        }
+
+        // [NEW] Force Refresh Pointer Cache Button
+        if (Vars::Misc::forceRefresh) {
+            PlayerCache::players.clear();
+            fakeDataModelAddr = baseAddr + offsets::FakeDataModelPointer;
+            fakeDataModel = Coms->ReadMemory<uintptr_t>(fakeDataModelAddr);
+            dataModelAddr = fakeDataModel + offsets::FakeDataModelToDataModel;
+            dataModelPtr = Coms->ReadMemory<uintptr_t>(dataModelAddr);
+            visualEngineAddr = baseAddr + offsets::VisualEnginePointer;
+            visualEngine = Coms->ReadMemory<uintptr_t>(visualEngineAddr);
+
+            Globals::dataModel = RBX::RbxInstance(dataModelPtr);
+            Globals::renderEngine = RBX::RenderEngine(visualEngine);
+            Globals::workspace = Globals::dataModel.FindChildByClass("Workspace");
+            Globals::players = Globals::dataModel.FindChildByClass("Players");
+            Globals::camera = Globals::workspace.FindChildByClass("Camera");
+
+            localPlayerAddr = Coms->ReadMemory<uintptr_t>(Globals::players.Addr + offsets::LocalPlayer);
+            Globals::localPlayer = RBX::RbxInstance(localPlayerAddr);
+            Vars::Misc::forceRefresh = false;
         }
 
         if (GetAsyncKeyState(VK_INSERT) & 1) {
@@ -129,9 +138,10 @@ int main() {
         }
         frameCounter++;
 
-        overlay.BeginFrame();
+        auto viewMatrix = Globals::renderEngine.GetViewMat(); // Get matrix first to pass to menu
 
-        overlay.RenderMenu();
+        overlay.BeginFrame();
+        overlay.RenderMenu(viewMatrix); // Passed to Menu for Radar
 
         ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
@@ -149,22 +159,22 @@ int main() {
             lastTime = currentTime;
         }
 
-        std::string watermark = "Made by Orange  |  Roblox External  |  FPS: " + std::to_string(fps);
-        ImVec2 textSize = ImGui::CalcTextSize(watermark.c_str());
-        float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
+        if (Vars::showWatermark) {
+            std::string watermark = "dolphin.club | EX | FPS: " + std::to_string(fps);
+            ImVec2 textSize = ImGui::CalcTextSize(watermark.c_str());
+            float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
+            float paddingX = 12.0f;
+            float paddingY = 8.0f;
+            ImVec2 boxMin(screenW - textSize.x - (paddingX * 2) - 20, 20);
+            ImVec2 boxMax(screenW - 20, 20 + textSize.y + (paddingY * 2));
 
-        float paddingX = 12.0f;
-        float paddingY = 8.0f;
-        ImVec2 boxMin(screenW - textSize.x - (paddingX * 2) - 20, 20);
-        ImVec2 boxMax(screenW - 20, 20 + textSize.y + (paddingY * 2));
+            drawList->AddRectFilled(boxMin, boxMax, IM_COL32(20, 20, 22, 240), 6.0f);
+            drawList->AddRectFilled(ImVec2(boxMin.x + 1, boxMin.y + 1), ImVec2(boxMax.x - 1, boxMin.y + 3), IM_COL32(100, 150, 255, 255), 6.0f); // Blue Accent
+            drawList->AddRect(boxMin, boxMax, IM_COL32(50, 50, 55, 255), 6.0f);
 
-        drawList->AddRectFilled(boxMin, boxMax, IM_COL32(20, 20, 22, 240), 4.0f);
-        drawList->AddRectFilled(ImVec2(boxMin.x + 1, boxMin.y + 1), ImVec2(boxMax.x - 1, boxMin.y + 3), IM_COL32(255, 140, 0, 255), 4.0f);
-        drawList->AddRect(boxMin, boxMax, IM_COL32(60, 60, 65, 255), 4.0f);
-
-        ImVec2 textPos(boxMin.x + paddingX, boxMin.y + paddingY + 2);
-        drawList->AddText(ImVec2(textPos.x + 1, textPos.y + 1), IM_COL32(0, 0, 0, 255), watermark.c_str());
-        drawList->AddText(textPos, IM_COL32(240, 240, 240, 255), watermark.c_str());
+            ImVec2 textPos(boxMin.x + paddingX, boxMin.y + paddingY + 2);
+            drawList->AddText(textPos, IM_COL32(240, 240, 240, 255), watermark.c_str());
+        }
 
         if (Vars::Aimbot::enabled && Vars::Aimbot::showFOV) {
             ImU32 fovCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::Aimbot::fovColor[0], Vars::Aimbot::fovColor[1], Vars::Aimbot::fovColor[2], Vars::Aimbot::fovColor[3]));
@@ -175,10 +185,7 @@ int main() {
             drawList->AddCircle(center, Vars::Aimbot::fovRadius, fovCol, 64, Vars::Aimbot::fovThickness);
         }
 
-        auto viewMatrix = Globals::renderEngine.GetViewMat();
-
         Aimbot::RunTriggerBot(viewMatrix);
-
         Aimbot::RunAimbot(viewMatrix, drawList);
         Visuals::RenderESP(drawList, viewMatrix);
 
@@ -187,8 +194,6 @@ int main() {
 
     running = false;
     localThread.join();
-
     overlay.Cleanup();
-
     return 0;
 }

@@ -28,6 +28,7 @@ namespace PlayerCache {
 
     inline std::vector<CachedPlayer> players;
     inline RBX::Vec3 localPlayerPos;
+    inline RBX::CFrame localPlayerCFrame; // [NEW] Stores accurate rotation
     inline uintptr_t localPlayerTeam = 0;
 
     inline void UpdatePlayers() {
@@ -45,6 +46,7 @@ namespace PlayerCache {
         if (localRoot.Addr == 0) return;
 
         localPlayerPos = localRoot.GetPos();
+        localPlayerCFrame = localRoot.GetCFrame(); // [NEW] Cache Rotation
 
         for (auto& cached : players) {
             cached.isValid = false;

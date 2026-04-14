@@ -2,15 +2,30 @@
 #include "../../../Game/W2S/W2S.h"
 #include "../../../Core/Cache/Cache.h"
 #include "../../../Core/Vars/Vars.h"
-#include "../../../Core/Features/Aimbot/Aimbot.h" // Needed to check Aimbot lock
+#include "../../../Core/Features/Aimbot/Aimbot.h" 
 #include "../../../Render/ImGui/imgui.h"
 #include <string>
 #include <algorithm>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace Visuals {
 
-    inline void DrawOutlinedText(ImDrawList* drawList, const ImVec2& pos, const std::string& text, ImU32 textColor) {
+    inline void DrawOutlinedText(ImDrawList* drawList, const ImVec2& pos, const std::string& text, ImU32 textColor, bool drawBg) {
+        ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+
+        // [NEW] Text Background Logic
+        if (drawBg) {
+            drawList->AddRectFilled(
+                ImVec2(pos.x - 2, pos.y - 1),
+                ImVec2(pos.x + textSize.x + 2, pos.y + textSize.y + 1),
+                IM_COL32(10, 10, 10, 180), 3.0f
+            );
+        }
+
         drawList->AddText(ImVec2(pos.x - 1, pos.y), IM_COL32(0, 0, 0, 255), text.c_str());
         drawList->AddText(ImVec2(pos.x + 1, pos.y), IM_COL32(0, 0, 0, 255), text.c_str());
         drawList->AddText(ImVec2(pos.x, pos.y - 1), IM_COL32(0, 0, 0, 255), text.c_str());
@@ -29,8 +44,10 @@ namespace Visuals {
         ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
         ImU32 targetHighCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::targetHighlightColor[0], Vars::ESP::targetHighlightColor[1], Vars::ESP::targetHighlightColor[2], Vars::ESP::targetHighlightColor[3]));
         ImU32 viewAngCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::viewAngleColor[0], Vars::ESP::viewAngleColor[1], Vars::ESP::viewAngleColor[2], Vars::ESP::viewAngleColor[3]));
+        ImU32 arrCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::arrowColor[0], Vars::ESP::arrowColor[1], Vars::ESP::arrowColor[2], Vars::ESP::arrowColor[3]));
 
         ImVec2 screenSize = ImGui::GetIO().DisplaySize;
+        ImVec2 screenCenter = ImVec2(screenSize.x / 2.0f, screenSize.y / 2.0f);
 
         for (auto& plr : PlayerCache::players) {
             if (!plr.isValid) continue;
@@ -38,7 +55,6 @@ namespace Visuals {
             if (plr.isNPC && !Vars::ESP::showNPCs) continue;
             if (!plr.isNPC && Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
-            // [NEW] Dynamic Target Highlight Logic
             bool isTarget = (Vars::ESP::highlightTarget && plr.playerAddr == Aimbot::lockedPlayerAddr);
             ImU32 boxCol = isTarget ? targetHighCol : baseBoxCol;
             ImU32 skelCol = isTarget ? targetHighCol : baseSkelCol;
@@ -63,7 +79,35 @@ namespace Visuals {
 
             if (head.Addr == 0) continue;
 
-            // [NEW] View Angles / Tracers
+            RBX::Vec2 screenPos = W2S::WorldToScreen(plr.position, viewMatrix);
+
+            // [FIXED] Accurate Relative Rotation for OOF Arrows
+            if (Vars::ESP::offScreenArrows) {
+                bool isOffScreen = (screenPos.X <= 0 || screenPos.Y <= 0 || screenPos.X >= screenSize.x || screenPos.Y >= screenSize.y || screenPos.X == 0);
+
+                if (isOffScreen) {
+                    RBX::Vec3 rightVec = PlayerCache::localPlayerCFrame.GetRightVector();
+                    RBX::Vec3 lookVec = PlayerCache::localPlayerCFrame.GetLookVector();
+
+                    float dx = plr.position.X - PlayerCache::localPlayerPos.X;
+                    float dy = plr.position.Y - PlayerCache::localPlayerPos.Y;
+                    float dz = plr.position.Z - PlayerCache::localPlayerPos.Z;
+
+                    float relX = (dx * rightVec.X) + (dy * rightVec.Y) + (dz * rightVec.Z);
+                    float relZ = (dx * lookVec.X) + (dy * lookVec.Y) + (dz * lookVec.Z);
+
+                    float screenAngle = atan2(relZ, relX);
+
+                    float radius = Vars::ESP::arrowRadius;
+                    ImVec2 p1 = ImVec2(screenCenter.x + cos(screenAngle) * radius, screenCenter.y + sin(screenAngle) * radius);
+                    ImVec2 p2 = ImVec2(screenCenter.x + cos(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sin(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize));
+                    ImVec2 p3 = ImVec2(screenCenter.x + cos(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sin(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize));
+
+                    drawList->AddTriangleFilled(p1, p2, p3, arrCol);
+                    drawList->AddTriangle(p1, p2, p3, IM_COL32(0, 0, 0, 255), 1.5f);
+                }
+            }
+
             if (Vars::ESP::viewAngles) {
                 auto headCF = head.GetCFrame();
                 auto lookVec = headCF.GetLookVector();
@@ -78,7 +122,7 @@ namespace Visuals {
                 RBX::Vec2 end2D = W2S::WorldToScreen(endPos, viewMatrix);
 
                 if (head2D.X != 0 && end2D.X != 0) {
-                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(end2D.X, end2D.Y), IM_COL32(0, 0, 0, 255), 3.0f); // Outline
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(end2D.X, end2D.Y), IM_COL32(0, 0, 0, 255), 3.0f);
                     drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(end2D.X, end2D.Y), viewAngCol, 1.5f);
                 }
             }
@@ -411,7 +455,7 @@ namespace Visuals {
                 if (Vars::ESP::healthText) {
                     std::string hpStr = std::to_string(static_cast<int>(plr.health)) + " HP";
                     ImVec2 hpSize = ImGui::CalcTextSize(hpStr.c_str());
-                    DrawOutlinedText(drawList, ImVec2(minX - 8 - hpSize.x, maxY - barHeight - 4), hpStr, IM_COL32(255, 255, 255, 255));
+                    DrawOutlinedText(drawList, ImVec2(minX - 8 - hpSize.x, maxY - barHeight - 4), hpStr, IM_COL32(255, 255, 255, 255), Vars::ESP::textBackground);
                 }
             }
 
@@ -419,7 +463,7 @@ namespace Visuals {
                 ImVec2 textSize = ImGui::CalcTextSize(plr.name.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
                 float textY = minY - textSize.y - 2;
-                DrawOutlinedText(drawList, ImVec2(textX, textY), plr.name, IM_COL32(255, 255, 255, 255));
+                DrawOutlinedText(drawList, ImVec2(textX, textY), plr.name, IM_COL32(255, 255, 255, 255), Vars::ESP::textBackground);
             }
 
             float bottomTextOffset = 2.0f;
@@ -427,14 +471,14 @@ namespace Visuals {
                 std::string distText = std::to_string(static_cast<int>(plr.distance)) + "m";
                 ImVec2 textSize = ImGui::CalcTextSize(distText.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
-                DrawOutlinedText(drawList, ImVec2(textX, maxY + bottomTextOffset), distText, IM_COL32(200, 200, 200, 255));
+                DrawOutlinedText(drawList, ImVec2(textX, maxY + bottomTextOffset), distText, IM_COL32(200, 200, 200, 255), Vars::ESP::textBackground);
                 bottomTextOffset += textSize.y + 2.0f;
             }
 
             if (Vars::ESP::weapon && !plr.equippedTool.empty()) {
                 ImVec2 textSize = ImGui::CalcTextSize(plr.equippedTool.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
-                DrawOutlinedText(drawList, ImVec2(textX, maxY + bottomTextOffset), plr.equippedTool, IM_COL32(150, 200, 255, 255));
+                DrawOutlinedText(drawList, ImVec2(textX, maxY + bottomTextOffset), plr.equippedTool, IM_COL32(150, 200, 255, 255), Vars::ESP::textBackground);
             }
 
             if (Vars::ESP::snaplines) {

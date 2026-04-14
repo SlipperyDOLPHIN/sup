@@ -54,6 +54,7 @@ namespace Config {
     inline void Save() {
         std::string f = GetPath();
         WriteBool("Global", "showHUD", Vars::showHUD, f);
+        WriteBool("Global", "showWatermark", Vars::showWatermark, f);
         WriteBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
         WriteBool("Radar", "enabled", Vars::Radar::enabled, f);
@@ -85,6 +86,8 @@ namespace Config {
         WriteBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
         WriteBool("ESP", "highlightTarget", Vars::ESP::highlightTarget, f);
         WriteBool("ESP", "viewAngles", Vars::ESP::viewAngles, f);
+        WriteBool("ESP", "offScreenArrows", Vars::ESP::offScreenArrows, f);
+        WriteFloat("ESP", "arrowRadius", Vars::ESP::arrowRadius, f);
         WriteBool("ESP", "boxes", Vars::ESP::boxes, f);
         WriteInt("ESP", "boxStyle", Vars::ESP::boxStyle, f);
         WriteBool("ESP", "boxFill", Vars::ESP::boxFill, f);
@@ -97,6 +100,7 @@ namespace Config {
         WriteBool("ESP", "weapon", Vars::ESP::weapon, f);
         WriteBool("ESP", "healthBar", Vars::ESP::healthBar, f);
         WriteBool("ESP", "healthText", Vars::ESP::healthText, f);
+        WriteBool("ESP", "textBackground", Vars::ESP::textBackground, f);
         WriteBool("ESP", "snaplines", Vars::ESP::snaplines, f);
         WriteInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, f);
         WriteBool("ESP", "crosshair", Vars::ESP::crosshair, f);
@@ -112,6 +116,7 @@ namespace Config {
         WriteColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, f);
         WriteColor("ESP", "targetHighlightColor", Vars::ESP::targetHighlightColor, f);
         WriteColor("ESP", "viewAngleColor", Vars::ESP::viewAngleColor, f);
+        WriteColor("ESP", "arrowColor", Vars::ESP::arrowColor, f);
 
         WriteBool("Local", "speedEnabled", Vars::Local::speedEnabled, f);
         WriteFloat("Local", "walkSpeed", Vars::Local::walkSpeed, f);
@@ -124,6 +129,7 @@ namespace Config {
     inline void Load() {
         std::string f = GetPath();
         Vars::showHUD = ReadBool("Global", "showHUD", Vars::showHUD, f);
+        Vars::showWatermark = ReadBool("Global", "showWatermark", Vars::showWatermark, f);
         Vars::Misc::streamProof = ReadBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
         Vars::Radar::enabled = ReadBool("Radar", "enabled", Vars::Radar::enabled, f);
@@ -155,6 +161,8 @@ namespace Config {
         Vars::ESP::showNPCs = ReadBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
         Vars::ESP::highlightTarget = ReadBool("ESP", "highlightTarget", Vars::ESP::highlightTarget, f);
         Vars::ESP::viewAngles = ReadBool("ESP", "viewAngles", Vars::ESP::viewAngles, f);
+        Vars::ESP::offScreenArrows = ReadBool("ESP", "offScreenArrows", Vars::ESP::offScreenArrows, f);
+        Vars::ESP::arrowRadius = ReadFloat("ESP", "arrowRadius", Vars::ESP::arrowRadius, f);
         Vars::ESP::boxes = ReadBool("ESP", "boxes", Vars::ESP::boxes, f);
         Vars::ESP::boxStyle = ReadInt("ESP", "boxStyle", Vars::ESP::boxStyle, f);
         Vars::ESP::boxFill = ReadBool("ESP", "boxFill", Vars::ESP::boxFill, f);
@@ -167,6 +175,7 @@ namespace Config {
         Vars::ESP::weapon = ReadBool("ESP", "weapon", Vars::ESP::weapon, f);
         Vars::ESP::healthBar = ReadBool("ESP", "healthBar", Vars::ESP::healthBar, f);
         Vars::ESP::healthText = ReadBool("ESP", "healthText", Vars::ESP::healthText, f);
+        Vars::ESP::textBackground = ReadBool("ESP", "textBackground", Vars::ESP::textBackground, f);
         Vars::ESP::snaplines = ReadBool("ESP", "snaplines", Vars::ESP::snaplines, f);
         Vars::ESP::snaplinePos = ReadInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, f);
         Vars::ESP::crosshair = ReadBool("ESP", "crosshair", Vars::ESP::crosshair, f);
@@ -182,6 +191,7 @@ namespace Config {
         ReadColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, f);
         ReadColor("ESP", "targetHighlightColor", Vars::ESP::targetHighlightColor, f);
         ReadColor("ESP", "viewAngleColor", Vars::ESP::viewAngleColor, f);
+        ReadColor("ESP", "arrowColor", Vars::ESP::arrowColor, f);
 
         Vars::Local::speedEnabled = ReadBool("Local", "speedEnabled", Vars::Local::speedEnabled, f);
         Vars::Local::walkSpeed = ReadFloat("Local", "walkSpeed", Vars::Local::walkSpeed, f);

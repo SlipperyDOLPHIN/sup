@@ -5,13 +5,14 @@ namespace Vars {
     inline bool menuOpen = false;
     inline int selectedTab = 0;
     inline bool showHUD = true;
+    inline bool showWatermark = true;
 
     namespace Radar {
         inline bool enabled = false;
         inline float range = 250.0f;
         inline float size = 200.0f;
         inline float blipSize = 4.0f;
-        inline float color[4] = { 1.0f, 0.2f, 0.2f, 1.0f }; // Red blips
+        inline float color[4] = { 1.0f, 0.2f, 0.2f, 1.0f };
     }
 
     namespace Aimbot {
@@ -44,25 +45,33 @@ namespace Vars {
         inline bool teamCheck = false;
         inline bool showNPCs = false;
 
-        inline bool highlightTarget = true; // [NEW] Highlights the Aimbot Target
-        inline float targetHighlightColor[4] = { 1.0f, 0.8f, 0.0f, 1.0f }; // Gold
+        inline bool highlightTarget = true;
+        inline float targetHighlightColor[4] = { 1.0f, 0.8f, 0.0f, 1.0f };
 
-        inline bool viewAngles = false; // [NEW] Shows where enemies are looking
+        inline bool viewAngles = false;
         inline float viewAngleLength = 5.0f;
-        inline float viewAngleColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta
+        inline float viewAngleColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f };
+
+        inline bool offScreenArrows = false;
+        inline float arrowRadius = 150.0f;
+        inline float arrowSize = 12.0f;
+        inline float arrowColor[4] = { 1.0f, 0.2f, 0.2f, 1.0f };
 
         inline bool boxes = false;
         inline int boxStyle = 0;
         inline bool boxFill = false;
         inline bool skeleton = false;
-        inline float skeletonThickness = 1.5f; // [NEW]
+        inline float skeletonThickness = 1.5f;
         inline bool headDot = false;
         inline float headDotSize = 4.0f;
+
         inline bool names = false;
         inline bool distance = false;
         inline bool weapon = false;
         inline bool healthBar = false;
         inline bool healthText = false;
+        inline bool textBackground = false; // [NEW] Text Backgrounds
+
         inline bool snaplines = false;
         inline int snaplinePos = 0;
 
@@ -92,5 +101,7 @@ namespace Vars {
 
     namespace Misc {
         inline bool streamProof = false;
+        inline bool forceRefresh = false;
+        inline bool exitCheat = false;
     }
 }
