@@ -140,7 +140,9 @@ int main() {
         auto viewMatrix = Globals::renderEngine.GetViewMat();
 
         overlay.BeginFrame();
-        overlay.RenderMenu(); // [FIXED] Removed the viewMatrix parameter 
+
+        // Zero arguments required!
+        overlay.RenderMenu();
 
         ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
@@ -158,9 +160,8 @@ int main() {
             lastTime = currentTime;
         }
 
-        // Clean Solid Watermark (RGB Removed)
         if (Vars::showWatermark) {
-            std::string watermark = "Premium Roblox External | FPS: " + std::to_string(fps);
+            std::string watermark = "dolphin.club | EX | FPS: " + std::to_string(fps);
             ImVec2 textSize = ImGui::CalcTextSize(watermark.c_str());
             float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
             float paddingX = 12.0f;

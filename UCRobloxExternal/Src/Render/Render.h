@@ -126,8 +126,10 @@ public:
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
+
         ImGuiIO& io = ImGui::GetIO();
-        io.IniFilename = nullptr;
+        static std::string layoutPath = Config::GetLayoutPath();
+        io.IniFilename = layoutPath.c_str();
 
         ImGuiStyle& style = ImGui::GetStyle();
         style.WindowRounding = 8.0f;
@@ -183,7 +185,6 @@ public:
         ImGui::NewFrame();
     }
 
-    // [FIXED] Removed the unreferenced viewMatrix argument
     void RenderMenu() {
 
         if (Vars::Radar::enabled) {
@@ -201,8 +202,6 @@ public:
                 ImVec2 center = ImVec2(p.x + radius, p.y + radius);
 
                 drawList->AddCircleFilled(center, radius, IM_COL32(20, 20, 22, 220), 64);
-
-                // [FIXED] Reverted RGB loop back to solid blue
                 drawList->AddCircle(center, radius, IM_COL32(100, 150, 255, 255), 64, 3.0f);
 
                 drawList->AddLine(ImVec2(center.x, center.y - radius), ImVec2(center.x, center.y + radius), IM_COL32(60, 60, 65, 150));
@@ -232,7 +231,6 @@ public:
                         blipCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::targetHighlightColor[0], Vars::ESP::targetHighlightColor[1], Vars::ESP::targetHighlightColor[2], Vars::ESP::targetHighlightColor[3]));
                     }
 
-                    // [FIXED] Explicit float math calls
                     float distFromCenter = sqrtf((rX - center.x) * (rX - center.x) + (rY - center.y) * (rY - center.y));
 
                     if (distFromCenter < radius - Vars::Radar::blipSize) {
@@ -456,7 +454,7 @@ public:
 
             ImGui::Checkbox("Head Dot", &Vars::ESP::headDot);
             if (Vars::ESP::headDot) {
-                ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 2.0f, 15.0f, "%.1f");
+                ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 1.0f, 5.0f, "%.1f");
                 ImGui::ColorEdit4("Dot Color", Vars::ESP::headDotColor, ImGuiColorEditFlags_NoInputs);
             }
 
@@ -487,7 +485,7 @@ public:
             if (Vars::ESP::healthBar) {
                 ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText);
             }
-            ImGui::Checkbox("Text Background", &Vars::ESP::textBackground);
+            ImGui::Checkbox("Text BG", &Vars::ESP::textBackground);
             ImGui::Spacing();
 
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
@@ -534,7 +532,7 @@ public:
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Premium Features");
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "HUD");
             ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);
             if (ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("Hides the cheat overlay from screen recording software (OBS, Discord, etc.)");

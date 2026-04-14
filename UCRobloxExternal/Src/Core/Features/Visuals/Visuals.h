@@ -8,10 +8,6 @@
 #include <algorithm>
 #include <cmath>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 namespace Visuals {
 
     inline void DrawOutlinedText(ImDrawList* drawList, const ImVec2& pos, const std::string& text, ImU32 textColor, bool drawBg) {
@@ -19,16 +15,16 @@ namespace Visuals {
 
         if (drawBg) {
             drawList->AddRectFilled(
-                ImVec2(pos.x - 2, pos.y - 1),
-                ImVec2(pos.x + textSize.x + 2, pos.y + textSize.y + 1),
+                ImVec2(pos.x - 2.0f, pos.y - 1.0f),
+                ImVec2(pos.x + textSize.x + 2.0f, pos.y + textSize.y + 1.0f),
                 IM_COL32(10, 10, 10, 180), 3.0f
             );
         }
 
-        drawList->AddText(ImVec2(pos.x - 1, pos.y), IM_COL32(0, 0, 0, 255), text.c_str());
-        drawList->AddText(ImVec2(pos.x + 1, pos.y), IM_COL32(0, 0, 0, 255), text.c_str());
-        drawList->AddText(ImVec2(pos.x, pos.y - 1), IM_COL32(0, 0, 0, 255), text.c_str());
-        drawList->AddText(ImVec2(pos.x, pos.y + 1), IM_COL32(0, 0, 0, 255), text.c_str());
+        drawList->AddText(ImVec2(pos.x - 1.0f, pos.y), IM_COL32(0, 0, 0, 255), text.c_str());
+        drawList->AddText(ImVec2(pos.x + 1.0f, pos.y), IM_COL32(0, 0, 0, 255), text.c_str());
+        drawList->AddText(ImVec2(pos.x, pos.y - 1.0f), IM_COL32(0, 0, 0, 255), text.c_str());
+        drawList->AddText(ImVec2(pos.x, pos.y + 1.0f), IM_COL32(0, 0, 0, 255), text.c_str());
         drawList->AddText(pos, textColor, text.c_str());
     }
 
@@ -94,14 +90,18 @@ namespace Visuals {
                     float relX = (dx * rightVec.X) + (dy * rightVec.Y) + (dz * rightVec.Z);
                     float relZ = (dx * lookVec.X) + (dy * lookVec.Y) + (dz * lookVec.Z);
 
-                    // [FIXED] Explicit atan2f to fix ambiguous compiler errors
                     float screenAngle = atan2f(relZ, relX);
 
                     float radius = Vars::ESP::arrowRadius;
-                    // [FIXED] Explicit cosf and sinf calls
-                    ImVec2 p1 = ImVec2(screenCenter.x + cosf(screenAngle) * radius, screenCenter.y + sinf(screenAngle) * radius);
-                    ImVec2 p2 = ImVec2(screenCenter.x + cosf(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sinf(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize));
-                    ImVec2 p3 = ImVec2(screenCenter.x + cosf(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sinf(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize));
+                    float arrSize = Vars::ESP::arrowSize;
+
+                    ImVec2 p1 = ImVec2(screenCenter.x + cosf(screenAngle) * radius, screenCenter.y - sinf(screenAngle) * radius);
+
+                    // [FIXED] Explicit float conversion for 3.14159 (Pi)
+                    float angleBack = screenAngle + 3.1415926535f;
+
+                    ImVec2 p2 = ImVec2(p1.x + cosf(angleBack - 0.5f) * arrSize, p1.y - sinf(angleBack - 0.5f) * arrSize);
+                    ImVec2 p3 = ImVec2(p1.x + cosf(angleBack + 0.5f) * arrSize, p1.y - sinf(angleBack + 0.5f) * arrSize);
 
                     drawList->AddTriangleFilled(p1, p2, p3, arrCol);
                     drawList->AddTriangle(p1, p2, p3, IM_COL32(0, 0, 0, 255), 1.5f);
@@ -112,10 +112,11 @@ namespace Visuals {
                 auto headCF = head.GetCFrame();
                 auto lookVec = headCF.GetLookVector();
                 auto headPos = head.GetPos();
+
                 RBX::Vec3 endPos = {
-                    headPos.X + lookVec.X * Vars::ESP::viewAngleLength,
-                    headPos.Y + lookVec.Y * Vars::ESP::viewAngleLength,
-                    headPos.Z + lookVec.Z * Vars::ESP::viewAngleLength
+                    headPos.X - lookVec.X * Vars::ESP::viewAngleLength,
+                    headPos.Y - lookVec.Y * Vars::ESP::viewAngleLength,
+                    headPos.Z - lookVec.Z * Vars::ESP::viewAngleLength
                 };
 
                 RBX::Vec2 head2D = W2S::WorldToScreen(headPos, viewMatrix);
@@ -135,7 +136,6 @@ namespace Visuals {
                 const float headSize = 1.0f;
                 for (int i = 0; i < 8; i++) {
                     float angle = (i / 8.0f) * 6.28318f;
-                    // [FIXED] Explicit cosf and sinf 
                     boundPoints[boundPointCount++] = { headPos.X + cosf(angle) * headSize, headPos.Y, headPos.Z + sinf(angle) * headSize };
                 }
                 boundPoints[boundPointCount++] = { headPos.X, headPos.Y + headSize, headPos.Z };
@@ -249,7 +249,6 @@ namespace Visuals {
                 const float headSize = 0.8f;
                 for (int i = 0; i < 8; i++) {
                     float angle = (i / 8.0f) * 6.28318f;
-                    // [FIXED] Explicit cosf and sinf 
                     boundPoints[boundPointCount++] = { headPos.X + cosf(angle) * headSize, headPos.Y, headPos.Z + sinf(angle) * headSize };
                 }
                 boundPoints[boundPointCount++] = { headPos.X, headPos.Y + headSize, headPos.Z };
@@ -389,8 +388,8 @@ namespace Visuals {
 
             if (Vars::ESP::boxes) {
                 if (Vars::ESP::boxStyle == 0) {
-                    drawList->AddRect(ImVec2(minX - 1, minY - 1), ImVec2(maxX + 1, maxY + 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
-                    drawList->AddRect(ImVec2(minX + 1, minY + 1), ImVec2(maxX - 1, maxY - 1), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
+                    drawList->AddRect(ImVec2(minX - 1.0f, minY - 1.0f), ImVec2(maxX + 1.0f, maxY + 1.0f), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
+                    drawList->AddRect(ImVec2(minX + 1.0f, minY + 1.0f), ImVec2(maxX - 1.0f, maxY - 1.0f), IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
                     drawList->AddRect(ImVec2(minX, minY), ImVec2(maxX, maxY), boxCol, 0.0f, 0, 1.0f);
                 }
                 else if (Vars::ESP::boxStyle == 1) {
@@ -447,24 +446,24 @@ namespace Visuals {
 
             if (Vars::ESP::healthBar && plr.maxHealth > 0) {
                 float healthPercent = static_cast<float>(plr.health) / static_cast<float>(plr.maxHealth);
-                ImU32 healthColor = IM_COL32(255 * (1 - healthPercent), 255 * healthPercent, 0, 255);
+                ImU32 healthColor = IM_COL32(255 * (1.0f - healthPercent), 255 * healthPercent, 0, 255);
 
                 float barHeight = (maxY - minY) * healthPercent;
 
-                drawList->AddRectFilled(ImVec2(minX - 6, minY - 1), ImVec2(minX - 2, maxY + 1), IM_COL32(0, 0, 0, 255));
-                drawList->AddRectFilled(ImVec2(minX - 5, maxY - barHeight), ImVec2(minX - 3, maxY), healthColor);
+                drawList->AddRectFilled(ImVec2(minX - 6.0f, minY - 1.0f), ImVec2(minX - 2.0f, maxY + 1.0f), IM_COL32(0, 0, 0, 255));
+                drawList->AddRectFilled(ImVec2(minX - 5.0f, maxY - barHeight), ImVec2(minX - 3.0f, maxY), healthColor);
 
                 if (Vars::ESP::healthText) {
                     std::string hpStr = std::to_string(static_cast<int>(plr.health)) + " HP";
                     ImVec2 hpSize = ImGui::CalcTextSize(hpStr.c_str());
-                    DrawOutlinedText(drawList, ImVec2(minX - 8 - hpSize.x, maxY - barHeight - 4), hpStr, IM_COL32(255, 255, 255, 255), Vars::ESP::textBackground);
+                    DrawOutlinedText(drawList, ImVec2(minX - 8.0f - hpSize.x, maxY - barHeight - 4.0f), hpStr, IM_COL32(255, 255, 255, 255), Vars::ESP::textBackground);
                 }
             }
 
             if (Vars::ESP::names) {
                 ImVec2 textSize = ImGui::CalcTextSize(plr.name.c_str());
                 float textX = (minX + maxX) / 2.0f - textSize.x / 2.0f;
-                float textY = minY - textSize.y - 2;
+                float textY = minY - textSize.y - 2.0f;
                 DrawOutlinedText(drawList, ImVec2(textX, textY), plr.name, IM_COL32(255, 255, 255, 255), Vars::ESP::textBackground);
             }
 

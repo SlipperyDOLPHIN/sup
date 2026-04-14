@@ -10,6 +10,13 @@ namespace Config {
         return std::string(path) + "\\roblox_premium_config.ini";
     }
 
+    // [NEW] Path for saving UI window positions
+    inline std::string GetLayoutPath() {
+        char path[MAX_PATH];
+        GetCurrentDirectoryA(MAX_PATH, path);
+        return std::string(path) + "\\roblox_imgui_layout.ini";
+    }
+
     inline void WriteBool(const char* section, const char* key, bool value, const std::string& file) {
         WritePrivateProfileStringA(section, key, value ? "1" : "0", file.c_str());
     }
@@ -129,7 +136,7 @@ namespace Config {
     inline void Load() {
         std::string f = GetPath();
         Vars::showHUD = ReadBool("Global", "showHUD", Vars::showHUD, f);
-        Vars::showWatermark = ReadBool("Global", "showWatermark", Vars::showWatermark, f);
+        Vars::showWatermark = ReadBool("Global", "showWatermark", true, f);
         Vars::Misc::streamProof = ReadBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
         Vars::Radar::enabled = ReadBool("Radar", "enabled", Vars::Radar::enabled, f);
