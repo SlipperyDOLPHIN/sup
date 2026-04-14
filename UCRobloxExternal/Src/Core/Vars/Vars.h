@@ -6,6 +6,14 @@ namespace Vars {
     inline int selectedTab = 0;
     inline bool showHUD = true;
 
+    namespace Radar {
+        inline bool enabled = false;
+        inline float range = 250.0f;
+        inline float size = 200.0f;
+        inline float blipSize = 4.0f;
+        inline float color[4] = { 1.0f, 0.2f, 0.2f, 1.0f }; // Red blips
+    }
+
     namespace Aimbot {
         inline bool enabled = false;
         inline bool teamCheck = false;
@@ -35,10 +43,19 @@ namespace Vars {
         inline bool enabled = false;
         inline bool teamCheck = false;
         inline bool showNPCs = false;
+
+        inline bool highlightTarget = true; // [NEW] Highlights the Aimbot Target
+        inline float targetHighlightColor[4] = { 1.0f, 0.8f, 0.0f, 1.0f }; // Gold
+
+        inline bool viewAngles = false; // [NEW] Shows where enemies are looking
+        inline float viewAngleLength = 5.0f;
+        inline float viewAngleColor[4] = { 1.0f, 0.0f, 1.0f, 1.0f }; // Magenta
+
         inline bool boxes = false;
         inline int boxStyle = 0;
         inline bool boxFill = false;
         inline bool skeleton = false;
+        inline float skeletonThickness = 1.5f; // [NEW]
         inline bool headDot = false;
         inline float headDotSize = 4.0f;
         inline bool names = false;

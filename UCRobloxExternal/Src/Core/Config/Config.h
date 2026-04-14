@@ -7,7 +7,7 @@ namespace Config {
     inline std::string GetPath() {
         char path[MAX_PATH];
         GetCurrentDirectoryA(MAX_PATH, path);
-        return std::string(path) + "\\roblox_external_config.ini";
+        return std::string(path) + "\\roblox_premium_config.ini";
     }
 
     inline void WriteBool(const char* section, const char* key, bool value, const std::string& file) {
@@ -52,120 +52,142 @@ namespace Config {
     }
 
     inline void Save() {
-        std::string file = GetPath();
+        std::string f = GetPath();
+        WriteBool("Global", "showHUD", Vars::showHUD, f);
+        WriteBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
-        WriteBool("Global", "showHUD", Vars::showHUD, file);
+        WriteBool("Radar", "enabled", Vars::Radar::enabled, f);
+        WriteFloat("Radar", "range", Vars::Radar::range, f);
+        WriteFloat("Radar", "size", Vars::Radar::size, f);
+        WriteFloat("Radar", "blipSize", Vars::Radar::blipSize, f);
+        WriteColor("Radar", "color", Vars::Radar::color, f);
 
-        WriteBool("Aimbot", "enabled", Vars::Aimbot::enabled, file);
-        WriteBool("Aimbot", "teamCheck", Vars::Aimbot::teamCheck, file);
-        WriteBool("Aimbot", "targetNPCs", Vars::Aimbot::targetNPCs, file);
-        WriteBool("Aimbot", "showFOV", Vars::Aimbot::showFOV, file);
-        WriteBool("Aimbot", "drawTargetLine", Vars::Aimbot::drawTargetLine, file);
-        WriteFloat("Aimbot", "fovRadius", Vars::Aimbot::fovRadius, file);
-        WriteFloat("Aimbot", "smoothing", Vars::Aimbot::smoothing, file);
-        WriteInt("Aimbot", "aimTarget", Vars::Aimbot::aimTarget, file);
-        WriteInt("Aimbot", "aimMethod", Vars::Aimbot::aimMethod, file);
-        WriteInt("Aimbot", "aimbotKey", Vars::Aimbot::aimbotKey, file);
-        WriteFloat("Aimbot", "fovThickness", Vars::Aimbot::fovThickness, file);
-        WriteColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, file);
+        WriteBool("Aimbot", "enabled", Vars::Aimbot::enabled, f);
+        WriteBool("Aimbot", "teamCheck", Vars::Aimbot::teamCheck, f);
+        WriteBool("Aimbot", "targetNPCs", Vars::Aimbot::targetNPCs, f);
+        WriteBool("Aimbot", "showFOV", Vars::Aimbot::showFOV, f);
+        WriteBool("Aimbot", "drawTargetLine", Vars::Aimbot::drawTargetLine, f);
+        WriteFloat("Aimbot", "fovRadius", Vars::Aimbot::fovRadius, f);
+        WriteFloat("Aimbot", "smoothing", Vars::Aimbot::smoothing, f);
+        WriteInt("Aimbot", "aimTarget", Vars::Aimbot::aimTarget, f);
+        WriteInt("Aimbot", "aimMethod", Vars::Aimbot::aimMethod, f);
+        WriteInt("Aimbot", "aimbotKey", Vars::Aimbot::aimbotKey, f);
+        WriteFloat("Aimbot", "fovThickness", Vars::Aimbot::fovThickness, f);
+        WriteColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, f);
 
-        WriteBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, file);
-        WriteInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, file);
-        WriteFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, file);
-        WriteInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, file);
+        WriteBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, f);
+        WriteInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, f);
+        WriteFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, f);
+        WriteInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, f);
 
-        WriteBool("ESP", "enabled", Vars::ESP::enabled, file);
-        WriteBool("ESP", "teamCheck", Vars::ESP::teamCheck, file);
-        WriteBool("ESP", "showNPCs", Vars::ESP::showNPCs, file);
-        WriteBool("ESP", "boxes", Vars::ESP::boxes, file);
-        WriteInt("ESP", "boxStyle", Vars::ESP::boxStyle, file);
-        WriteBool("ESP", "boxFill", Vars::ESP::boxFill, file);
-        WriteBool("ESP", "skeleton", Vars::ESP::skeleton, file);
-        WriteBool("ESP", "headDot", Vars::ESP::headDot, file);
-        WriteFloat("ESP", "headDotSize", Vars::ESP::headDotSize, file);
-        WriteBool("ESP", "names", Vars::ESP::names, file);
-        WriteBool("ESP", "distance", Vars::ESP::distance, file);
-        WriteBool("ESP", "weapon", Vars::ESP::weapon, file);
-        WriteBool("ESP", "healthBar", Vars::ESP::healthBar, file);
-        WriteBool("ESP", "healthText", Vars::ESP::healthText, file);
-        WriteBool("ESP", "snaplines", Vars::ESP::snaplines, file);
-        WriteInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, file);
-        WriteBool("ESP", "crosshair", Vars::ESP::crosshair, file);
-        WriteFloat("ESP", "crosshairSize", Vars::ESP::crosshairSize, file);
-        WriteFloat("ESP", "crosshairThickness", Vars::ESP::crosshairThickness, file);
-        WriteFloat("ESP", "maxDistance", Vars::ESP::maxDistance, file);
+        WriteBool("ESP", "enabled", Vars::ESP::enabled, f);
+        WriteBool("ESP", "teamCheck", Vars::ESP::teamCheck, f);
+        WriteBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
+        WriteBool("ESP", "highlightTarget", Vars::ESP::highlightTarget, f);
+        WriteBool("ESP", "viewAngles", Vars::ESP::viewAngles, f);
+        WriteBool("ESP", "boxes", Vars::ESP::boxes, f);
+        WriteInt("ESP", "boxStyle", Vars::ESP::boxStyle, f);
+        WriteBool("ESP", "boxFill", Vars::ESP::boxFill, f);
+        WriteBool("ESP", "skeleton", Vars::ESP::skeleton, f);
+        WriteFloat("ESP", "skeletonThickness", Vars::ESP::skeletonThickness, f);
+        WriteBool("ESP", "headDot", Vars::ESP::headDot, f);
+        WriteFloat("ESP", "headDotSize", Vars::ESP::headDotSize, f);
+        WriteBool("ESP", "names", Vars::ESP::names, f);
+        WriteBool("ESP", "distance", Vars::ESP::distance, f);
+        WriteBool("ESP", "weapon", Vars::ESP::weapon, f);
+        WriteBool("ESP", "healthBar", Vars::ESP::healthBar, f);
+        WriteBool("ESP", "healthText", Vars::ESP::healthText, f);
+        WriteBool("ESP", "snaplines", Vars::ESP::snaplines, f);
+        WriteInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, f);
+        WriteBool("ESP", "crosshair", Vars::ESP::crosshair, f);
+        WriteFloat("ESP", "crosshairSize", Vars::ESP::crosshairSize, f);
+        WriteFloat("ESP", "crosshairThickness", Vars::ESP::crosshairThickness, f);
+        WriteFloat("ESP", "maxDistance", Vars::ESP::maxDistance, f);
 
-        WriteColor("ESP", "boxColor", Vars::ESP::boxColor, file);
-        WriteColor("ESP", "boxFillColor", Vars::ESP::boxFillColor, file);
-        WriteColor("ESP", "skeletonColor", Vars::ESP::skeletonColor, file);
-        WriteColor("ESP", "headDotColor", Vars::ESP::headDotColor, file);
-        WriteColor("ESP", "snaplineColor", Vars::ESP::snaplineColor, file);
-        WriteColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, file);
+        WriteColor("ESP", "boxColor", Vars::ESP::boxColor, f);
+        WriteColor("ESP", "boxFillColor", Vars::ESP::boxFillColor, f);
+        WriteColor("ESP", "skeletonColor", Vars::ESP::skeletonColor, f);
+        WriteColor("ESP", "headDotColor", Vars::ESP::headDotColor, f);
+        WriteColor("ESP", "snaplineColor", Vars::ESP::snaplineColor, f);
+        WriteColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, f);
+        WriteColor("ESP", "targetHighlightColor", Vars::ESP::targetHighlightColor, f);
+        WriteColor("ESP", "viewAngleColor", Vars::ESP::viewAngleColor, f);
 
-        WriteBool("Local", "speedEnabled", Vars::Local::speedEnabled, file);
-        WriteFloat("Local", "walkSpeed", Vars::Local::walkSpeed, file);
-        WriteBool("Local", "jumpEnabled", Vars::Local::jumpEnabled, file);
-        WriteFloat("Local", "jumpPower", Vars::Local::jumpPower, file);
-        WriteBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, file);
-        WriteFloat("Local", "cameraFOV", Vars::Local::cameraFOV, file);
+        WriteBool("Local", "speedEnabled", Vars::Local::speedEnabled, f);
+        WriteFloat("Local", "walkSpeed", Vars::Local::walkSpeed, f);
+        WriteBool("Local", "jumpEnabled", Vars::Local::jumpEnabled, f);
+        WriteFloat("Local", "jumpPower", Vars::Local::jumpPower, f);
+        WriteBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, f);
+        WriteFloat("Local", "cameraFOV", Vars::Local::cameraFOV, f);
     }
 
     inline void Load() {
-        std::string file = GetPath();
+        std::string f = GetPath();
+        Vars::showHUD = ReadBool("Global", "showHUD", Vars::showHUD, f);
+        Vars::Misc::streamProof = ReadBool("Misc", "streamProof", Vars::Misc::streamProof, f);
 
-        Vars::showHUD = ReadBool("Global", "showHUD", Vars::showHUD, file);
+        Vars::Radar::enabled = ReadBool("Radar", "enabled", Vars::Radar::enabled, f);
+        Vars::Radar::range = ReadFloat("Radar", "range", Vars::Radar::range, f);
+        Vars::Radar::size = ReadFloat("Radar", "size", Vars::Radar::size, f);
+        Vars::Radar::blipSize = ReadFloat("Radar", "blipSize", Vars::Radar::blipSize, f);
+        ReadColor("Radar", "color", Vars::Radar::color, f);
 
-        Vars::Aimbot::enabled = ReadBool("Aimbot", "enabled", Vars::Aimbot::enabled, file);
-        Vars::Aimbot::teamCheck = ReadBool("Aimbot", "teamCheck", Vars::Aimbot::teamCheck, file);
-        Vars::Aimbot::targetNPCs = ReadBool("Aimbot", "targetNPCs", Vars::Aimbot::targetNPCs, file);
-        Vars::Aimbot::showFOV = ReadBool("Aimbot", "showFOV", Vars::Aimbot::showFOV, file);
-        Vars::Aimbot::drawTargetLine = ReadBool("Aimbot", "drawTargetLine", Vars::Aimbot::drawTargetLine, file);
-        Vars::Aimbot::fovRadius = ReadFloat("Aimbot", "fovRadius", Vars::Aimbot::fovRadius, file);
-        Vars::Aimbot::smoothing = ReadFloat("Aimbot", "smoothing", Vars::Aimbot::smoothing, file);
-        Vars::Aimbot::aimTarget = ReadInt("Aimbot", "aimTarget", Vars::Aimbot::aimTarget, file);
-        Vars::Aimbot::aimMethod = ReadInt("Aimbot", "aimMethod", Vars::Aimbot::aimMethod, file);
-        Vars::Aimbot::aimbotKey = ReadInt("Aimbot", "aimbotKey", Vars::Aimbot::aimbotKey, file);
-        Vars::Aimbot::fovThickness = ReadFloat("Aimbot", "fovThickness", Vars::Aimbot::fovThickness, file);
-        ReadColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, file);
+        Vars::Aimbot::enabled = ReadBool("Aimbot", "enabled", Vars::Aimbot::enabled, f);
+        Vars::Aimbot::teamCheck = ReadBool("Aimbot", "teamCheck", Vars::Aimbot::teamCheck, f);
+        Vars::Aimbot::targetNPCs = ReadBool("Aimbot", "targetNPCs", Vars::Aimbot::targetNPCs, f);
+        Vars::Aimbot::showFOV = ReadBool("Aimbot", "showFOV", Vars::Aimbot::showFOV, f);
+        Vars::Aimbot::drawTargetLine = ReadBool("Aimbot", "drawTargetLine", Vars::Aimbot::drawTargetLine, f);
+        Vars::Aimbot::fovRadius = ReadFloat("Aimbot", "fovRadius", Vars::Aimbot::fovRadius, f);
+        Vars::Aimbot::smoothing = ReadFloat("Aimbot", "smoothing", Vars::Aimbot::smoothing, f);
+        Vars::Aimbot::aimTarget = ReadInt("Aimbot", "aimTarget", Vars::Aimbot::aimTarget, f);
+        Vars::Aimbot::aimMethod = ReadInt("Aimbot", "aimMethod", Vars::Aimbot::aimMethod, f);
+        Vars::Aimbot::aimbotKey = ReadInt("Aimbot", "aimbotKey", Vars::Aimbot::aimbotKey, f);
+        Vars::Aimbot::fovThickness = ReadFloat("Aimbot", "fovThickness", Vars::Aimbot::fovThickness, f);
+        ReadColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, f);
 
-        Vars::TriggerBot::enabled = ReadBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, file);
-        Vars::TriggerBot::triggerKey = ReadInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, file);
-        Vars::TriggerBot::triggerDistance = ReadFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, file);
-        Vars::TriggerBot::clickDelay = ReadInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, file);
+        Vars::TriggerBot::enabled = ReadBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, f);
+        Vars::TriggerBot::triggerKey = ReadInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, f);
+        Vars::TriggerBot::triggerDistance = ReadFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, f);
+        Vars::TriggerBot::clickDelay = ReadInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, f);
 
-        Vars::ESP::enabled = ReadBool("ESP", "enabled", Vars::ESP::enabled, file);
-        Vars::ESP::teamCheck = ReadBool("ESP", "teamCheck", Vars::ESP::teamCheck, file);
-        Vars::ESP::showNPCs = ReadBool("ESP", "showNPCs", Vars::ESP::showNPCs, file);
-        Vars::ESP::boxes = ReadBool("ESP", "boxes", Vars::ESP::boxes, file);
-        Vars::ESP::boxStyle = ReadInt("ESP", "boxStyle", Vars::ESP::boxStyle, file);
-        Vars::ESP::boxFill = ReadBool("ESP", "boxFill", Vars::ESP::boxFill, file);
-        Vars::ESP::skeleton = ReadBool("ESP", "skeleton", Vars::ESP::skeleton, file);
-        Vars::ESP::headDot = ReadBool("ESP", "headDot", Vars::ESP::headDot, file);
-        Vars::ESP::headDotSize = ReadFloat("ESP", "headDotSize", Vars::ESP::headDotSize, file);
-        Vars::ESP::names = ReadBool("ESP", "names", Vars::ESP::names, file);
-        Vars::ESP::distance = ReadBool("ESP", "distance", Vars::ESP::distance, file);
-        Vars::ESP::weapon = ReadBool("ESP", "weapon", Vars::ESP::weapon, file);
-        Vars::ESP::healthBar = ReadBool("ESP", "healthBar", Vars::ESP::healthBar, file);
-        Vars::ESP::healthText = ReadBool("ESP", "healthText", Vars::ESP::healthText, file);
-        Vars::ESP::snaplines = ReadBool("ESP", "snaplines", Vars::ESP::snaplines, file);
-        Vars::ESP::snaplinePos = ReadInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, file);
-        Vars::ESP::crosshair = ReadBool("ESP", "crosshair", Vars::ESP::crosshair, file);
-        Vars::ESP::crosshairSize = ReadFloat("ESP", "crosshairSize", Vars::ESP::crosshairSize, file);
-        Vars::ESP::crosshairThickness = ReadFloat("ESP", "crosshairThickness", Vars::ESP::crosshairThickness, file);
-        Vars::ESP::maxDistance = ReadFloat("ESP", "maxDistance", Vars::ESP::maxDistance, file);
+        Vars::ESP::enabled = ReadBool("ESP", "enabled", Vars::ESP::enabled, f);
+        Vars::ESP::teamCheck = ReadBool("ESP", "teamCheck", Vars::ESP::teamCheck, f);
+        Vars::ESP::showNPCs = ReadBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
+        Vars::ESP::highlightTarget = ReadBool("ESP", "highlightTarget", Vars::ESP::highlightTarget, f);
+        Vars::ESP::viewAngles = ReadBool("ESP", "viewAngles", Vars::ESP::viewAngles, f);
+        Vars::ESP::boxes = ReadBool("ESP", "boxes", Vars::ESP::boxes, f);
+        Vars::ESP::boxStyle = ReadInt("ESP", "boxStyle", Vars::ESP::boxStyle, f);
+        Vars::ESP::boxFill = ReadBool("ESP", "boxFill", Vars::ESP::boxFill, f);
+        Vars::ESP::skeleton = ReadBool("ESP", "skeleton", Vars::ESP::skeleton, f);
+        Vars::ESP::skeletonThickness = ReadFloat("ESP", "skeletonThickness", Vars::ESP::skeletonThickness, f);
+        Vars::ESP::headDot = ReadBool("ESP", "headDot", Vars::ESP::headDot, f);
+        Vars::ESP::headDotSize = ReadFloat("ESP", "headDotSize", Vars::ESP::headDotSize, f);
+        Vars::ESP::names = ReadBool("ESP", "names", Vars::ESP::names, f);
+        Vars::ESP::distance = ReadBool("ESP", "distance", Vars::ESP::distance, f);
+        Vars::ESP::weapon = ReadBool("ESP", "weapon", Vars::ESP::weapon, f);
+        Vars::ESP::healthBar = ReadBool("ESP", "healthBar", Vars::ESP::healthBar, f);
+        Vars::ESP::healthText = ReadBool("ESP", "healthText", Vars::ESP::healthText, f);
+        Vars::ESP::snaplines = ReadBool("ESP", "snaplines", Vars::ESP::snaplines, f);
+        Vars::ESP::snaplinePos = ReadInt("ESP", "snaplinePos", Vars::ESP::snaplinePos, f);
+        Vars::ESP::crosshair = ReadBool("ESP", "crosshair", Vars::ESP::crosshair, f);
+        Vars::ESP::crosshairSize = ReadFloat("ESP", "crosshairSize", Vars::ESP::crosshairSize, f);
+        Vars::ESP::crosshairThickness = ReadFloat("ESP", "crosshairThickness", Vars::ESP::crosshairThickness, f);
+        Vars::ESP::maxDistance = ReadFloat("ESP", "maxDistance", Vars::ESP::maxDistance, f);
 
-        ReadColor("ESP", "boxColor", Vars::ESP::boxColor, file);
-        ReadColor("ESP", "boxFillColor", Vars::ESP::boxFillColor, file);
-        ReadColor("ESP", "skeletonColor", Vars::ESP::skeletonColor, file);
-        ReadColor("ESP", "headDotColor", Vars::ESP::headDotColor, file);
-        ReadColor("ESP", "snaplineColor", Vars::ESP::snaplineColor, file);
-        ReadColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, file);
+        ReadColor("ESP", "boxColor", Vars::ESP::boxColor, f);
+        ReadColor("ESP", "boxFillColor", Vars::ESP::boxFillColor, f);
+        ReadColor("ESP", "skeletonColor", Vars::ESP::skeletonColor, f);
+        ReadColor("ESP", "headDotColor", Vars::ESP::headDotColor, f);
+        ReadColor("ESP", "snaplineColor", Vars::ESP::snaplineColor, f);
+        ReadColor("ESP", "crosshairColor", Vars::ESP::crosshairColor, f);
+        ReadColor("ESP", "targetHighlightColor", Vars::ESP::targetHighlightColor, f);
+        ReadColor("ESP", "viewAngleColor", Vars::ESP::viewAngleColor, f);
 
-        Vars::Local::speedEnabled = ReadBool("Local", "speedEnabled", Vars::Local::speedEnabled, file);
-        Vars::Local::walkSpeed = ReadFloat("Local", "walkSpeed", Vars::Local::walkSpeed, file);
-        Vars::Local::jumpEnabled = ReadBool("Local", "jumpEnabled", Vars::Local::jumpEnabled, file);
-        Vars::Local::jumpPower = ReadFloat("Local", "jumpPower", Vars::Local::jumpPower, file);
-        Vars::Local::fovChangerEnabled = ReadBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, file);
-        Vars::Local::cameraFOV = ReadFloat("Local", "cameraFOV", Vars::Local::cameraFOV, file);
+        Vars::Local::speedEnabled = ReadBool("Local", "speedEnabled", Vars::Local::speedEnabled, f);
+        Vars::Local::walkSpeed = ReadFloat("Local", "walkSpeed", Vars::Local::walkSpeed, f);
+        Vars::Local::jumpEnabled = ReadBool("Local", "jumpEnabled", Vars::Local::jumpEnabled, f);
+        Vars::Local::jumpPower = ReadFloat("Local", "jumpPower", Vars::Local::jumpPower, f);
+        Vars::Local::fovChangerEnabled = ReadBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, f);
+        Vars::Local::cameraFOV = ReadFloat("Local", "cameraFOV", Vars::Local::cameraFOV, f);
     }
 }

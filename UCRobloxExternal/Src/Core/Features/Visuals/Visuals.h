@@ -2,6 +2,7 @@
 #include "../../../Game/W2S/W2S.h"
 #include "../../../Core/Cache/Cache.h"
 #include "../../../Core/Vars/Vars.h"
+#include "../../../Core/Features/Aimbot/Aimbot.h" // Needed to check Aimbot lock
 #include "../../../Render/ImGui/imgui.h"
 #include <string>
 #include <algorithm>
@@ -21,22 +22,28 @@ namespace Visuals {
     {
         if (!Vars::ESP::enabled) return;
 
-        ImU32 boxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
+        ImU32 baseBoxCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxColor[0], Vars::ESP::boxColor[1], Vars::ESP::boxColor[2], Vars::ESP::boxColor[3]));
+        ImU32 baseSkelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
         ImU32 boxFillCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::boxFillColor[0], Vars::ESP::boxFillColor[1], Vars::ESP::boxFillColor[2], Vars::ESP::boxFillColor[3]));
-        ImU32 skelCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::skeletonColor[0], Vars::ESP::skeletonColor[1], Vars::ESP::skeletonColor[2], Vars::ESP::skeletonColor[3]));
         ImU32 headDotCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::headDotColor[0], Vars::ESP::headDotColor[1], Vars::ESP::headDotColor[2], Vars::ESP::headDotColor[3]));
         ImU32 snapCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::snaplineColor[0], Vars::ESP::snaplineColor[1], Vars::ESP::snaplineColor[2], Vars::ESP::snaplineColor[3]));
+        ImU32 targetHighCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::targetHighlightColor[0], Vars::ESP::targetHighlightColor[1], Vars::ESP::targetHighlightColor[2], Vars::ESP::targetHighlightColor[3]));
+        ImU32 viewAngCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::viewAngleColor[0], Vars::ESP::viewAngleColor[1], Vars::ESP::viewAngleColor[2], Vars::ESP::viewAngleColor[3]));
+
+        ImVec2 screenSize = ImGui::GetIO().DisplaySize;
 
         for (auto& plr : PlayerCache::players) {
             if (!plr.isValid) continue;
-
             if (plr.distance > Vars::ESP::maxDistance) continue;
-
             if (plr.isNPC && !Vars::ESP::showNPCs) continue;
             if (!plr.isNPC && Vars::ESP::teamCheck && plr.teamAddr == PlayerCache::localPlayerTeam && plr.teamAddr != 0) continue;
 
-            auto character = RBX::RbxInstance(plr.characterAddr);
+            // [NEW] Dynamic Target Highlight Logic
+            bool isTarget = (Vars::ESP::highlightTarget && plr.playerAddr == Aimbot::lockedPlayerAddr);
+            ImU32 boxCol = isTarget ? targetHighCol : baseBoxCol;
+            ImU32 skelCol = isTarget ? targetHighCol : baseSkelCol;
 
+            auto character = RBX::RbxInstance(plr.characterAddr);
             auto head = character.FindChild("Head");
             auto torso = character.FindChild("Torso");
             auto leftArm = character.FindChild("Left Arm");
@@ -45,7 +52,6 @@ namespace Visuals {
             auto rightLeg = character.FindChild("Right Leg");
 
             bool isR6 = (torso.Addr != 0);
-
             if (!isR6) {
                 head = character.FindChild("Head");
                 torso = character.FindChild("UpperTorso");
@@ -56,6 +62,26 @@ namespace Visuals {
             }
 
             if (head.Addr == 0) continue;
+
+            // [NEW] View Angles / Tracers
+            if (Vars::ESP::viewAngles) {
+                auto headCF = head.GetCFrame();
+                auto lookVec = headCF.GetLookVector();
+                auto headPos = head.GetPos();
+                RBX::Vec3 endPos = {
+                    headPos.X + lookVec.X * Vars::ESP::viewAngleLength,
+                    headPos.Y + lookVec.Y * Vars::ESP::viewAngleLength,
+                    headPos.Z + lookVec.Z * Vars::ESP::viewAngleLength
+                };
+
+                RBX::Vec2 head2D = W2S::WorldToScreen(headPos, viewMatrix);
+                RBX::Vec2 end2D = W2S::WorldToScreen(endPos, viewMatrix);
+
+                if (head2D.X != 0 && end2D.X != 0) {
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(end2D.X, end2D.Y), IM_COL32(0, 0, 0, 255), 3.0f); // Outline
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(end2D.X, end2D.Y), viewAngCol, 1.5f);
+                }
+            }
 
             RBX::Vec3 boundPoints[200];
             int boundPointCount = 0;
@@ -98,6 +124,7 @@ namespace Visuals {
                     auto armRight = armCF.GetRightVector();
                     auto armUp = armCF.GetUpVector();
                     auto armLook = armCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -117,6 +144,7 @@ namespace Visuals {
                     auto armRight = armCF.GetRightVector();
                     auto armUp = armCF.GetUpVector();
                     auto armLook = armCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -137,6 +165,7 @@ namespace Visuals {
                     auto legRight = legCF.GetRightVector();
                     auto legUp = legCF.GetUpVector();
                     auto legLook = legCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -156,6 +185,7 @@ namespace Visuals {
                     auto legRight = legCF.GetRightVector();
                     auto legUp = legCF.GetUpVector();
                     auto legLook = legCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -186,6 +216,7 @@ namespace Visuals {
                     auto torsoUp = torsoCF.GetUpVector();
                     auto torsoLook = torsoCF.GetLookVector();
                     const float utW = 1.6f, utH = 1.5f, utD = 0.8f;
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -206,6 +237,7 @@ namespace Visuals {
                     auto handRight = handCF.GetRightVector();
                     auto handUp = handCF.GetUpVector();
                     auto handLook = handCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -225,6 +257,7 @@ namespace Visuals {
                     auto handRight = handCF.GetRightVector();
                     auto handUp = handCF.GetUpVector();
                     auto handLook = handCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -245,6 +278,7 @@ namespace Visuals {
                     auto footRight = footCF.GetRightVector();
                     auto footUp = footCF.GetUpVector();
                     auto footLook = footCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -264,6 +298,7 @@ namespace Visuals {
                     auto footRight = footCF.GetRightVector();
                     auto footUp = footCF.GetUpVector();
                     auto footLook = footCF.GetLookVector();
+
                     for (int x = -1; x <= 1; x += 2) {
                         for (int y = -1; y <= 1; y += 2) {
                             for (int z = -1; z <= 1; z += 2) {
@@ -297,8 +332,6 @@ namespace Visuals {
 
             float boxWidth = maxX - minX;
             float boxHeight = maxY - minY;
-
-            ImVec2 screenSize = ImGui::GetIO().DisplaySize;
             const float MAX_BOX_WIDTH = screenSize.x * 1.5f;
             const float MAX_BOX_HEIGHT = screenSize.y * 1.5f;
 
@@ -352,11 +385,17 @@ namespace Visuals {
                 RBX::Vec2 rLeg2D = W2S::WorldToScreen(rightLeg.GetPos(), viewMatrix);
 
                 if (head2D.X != 0 && torso2D.X != 0 && lArm2D.X != 0 && rArm2D.X != 0 && lLeg2D.X != 0 && rLeg2D.X != 0) {
-                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), skelCol, 1.5f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), skelCol, 1.5f);
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+
+                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, Vars::ESP::skeletonThickness);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, Vars::ESP::skeletonThickness);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), skelCol, Vars::ESP::skeletonThickness);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), skelCol, Vars::ESP::skeletonThickness);
+                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), skelCol, Vars::ESP::skeletonThickness);
                 }
             }
 
@@ -406,22 +445,6 @@ namespace Visuals {
 
                 drawList->AddLine(startPos, ImVec2((minX + maxX) / 2.0f, maxY), snapCol, 1.0f);
             }
-        }
-
-        if (Vars::ESP::crosshair) {
-            ImU32 chCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::crosshairColor[0], Vars::ESP::crosshairColor[1], Vars::ESP::crosshairColor[2], Vars::ESP::crosshairColor[3]));
-            ImVec2 center = ImGui::GetIO().DisplaySize;
-            center.x /= 2.0f;
-            center.y /= 2.0f;
-
-            float s = Vars::ESP::crosshairSize;
-            float t = Vars::ESP::crosshairThickness;
-
-            drawList->AddLine(ImVec2(center.x - s - 1, center.y), ImVec2(center.x + s + 1, center.y), IM_COL32(0, 0, 0, 255), t + 2.0f);
-            drawList->AddLine(ImVec2(center.x, center.y - s - 1), ImVec2(center.x, center.y + s + 1), IM_COL32(0, 0, 0, 255), t + 2.0f);
-
-            drawList->AddLine(ImVec2(center.x - s, center.y), ImVec2(center.x + s, center.y), chCol, t);
-            drawList->AddLine(ImVec2(center.x, center.y - s), ImVec2(center.x, center.y + s), chCol, t);
         }
     }
 }
