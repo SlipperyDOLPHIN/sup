@@ -17,7 +17,6 @@ namespace Visuals {
     inline void DrawOutlinedText(ImDrawList* drawList, const ImVec2& pos, const std::string& text, ImU32 textColor, bool drawBg) {
         ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
 
-        // [NEW] Text Background Logic
         if (drawBg) {
             drawList->AddRectFilled(
                 ImVec2(pos.x - 2, pos.y - 1),
@@ -81,7 +80,6 @@ namespace Visuals {
 
             RBX::Vec2 screenPos = W2S::WorldToScreen(plr.position, viewMatrix);
 
-            // [FIXED] Accurate Relative Rotation for OOF Arrows
             if (Vars::ESP::offScreenArrows) {
                 bool isOffScreen = (screenPos.X <= 0 || screenPos.Y <= 0 || screenPos.X >= screenSize.x || screenPos.Y >= screenSize.y || screenPos.X == 0);
 
@@ -96,12 +94,14 @@ namespace Visuals {
                     float relX = (dx * rightVec.X) + (dy * rightVec.Y) + (dz * rightVec.Z);
                     float relZ = (dx * lookVec.X) + (dy * lookVec.Y) + (dz * lookVec.Z);
 
-                    float screenAngle = atan2(relZ, relX);
+                    // [FIXED] Explicit atan2f to fix ambiguous compiler errors
+                    float screenAngle = atan2f(relZ, relX);
 
                     float radius = Vars::ESP::arrowRadius;
-                    ImVec2 p1 = ImVec2(screenCenter.x + cos(screenAngle) * radius, screenCenter.y + sin(screenAngle) * radius);
-                    ImVec2 p2 = ImVec2(screenCenter.x + cos(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sin(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize));
-                    ImVec2 p3 = ImVec2(screenCenter.x + cos(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sin(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize));
+                    // [FIXED] Explicit cosf and sinf calls
+                    ImVec2 p1 = ImVec2(screenCenter.x + cosf(screenAngle) * radius, screenCenter.y + sinf(screenAngle) * radius);
+                    ImVec2 p2 = ImVec2(screenCenter.x + cosf(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sinf(screenAngle - 0.2f) * (radius - Vars::ESP::arrowSize));
+                    ImVec2 p3 = ImVec2(screenCenter.x + cosf(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize), screenCenter.y + sinf(screenAngle + 0.2f) * (radius - Vars::ESP::arrowSize));
 
                     drawList->AddTriangleFilled(p1, p2, p3, arrCol);
                     drawList->AddTriangle(p1, p2, p3, IM_COL32(0, 0, 0, 255), 1.5f);
@@ -135,6 +135,7 @@ namespace Visuals {
                 const float headSize = 1.0f;
                 for (int i = 0; i < 8; i++) {
                     float angle = (i / 8.0f) * 6.28318f;
+                    // [FIXED] Explicit cosf and sinf 
                     boundPoints[boundPointCount++] = { headPos.X + cosf(angle) * headSize, headPos.Y, headPos.Z + sinf(angle) * headSize };
                 }
                 boundPoints[boundPointCount++] = { headPos.X, headPos.Y + headSize, headPos.Z };
@@ -248,6 +249,7 @@ namespace Visuals {
                 const float headSize = 0.8f;
                 for (int i = 0; i < 8; i++) {
                     float angle = (i / 8.0f) * 6.28318f;
+                    // [FIXED] Explicit cosf and sinf 
                     boundPoints[boundPointCount++] = { headPos.X + cosf(angle) * headSize, headPos.Y, headPos.Z + sinf(angle) * headSize };
                 }
                 boundPoints[boundPointCount++] = { headPos.X, headPos.Y + headSize, headPos.Z };

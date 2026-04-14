@@ -100,7 +100,6 @@ int main() {
             break;
         }
 
-        // [NEW] Force Refresh Pointer Cache Button
         if (Vars::Misc::forceRefresh) {
             PlayerCache::players.clear();
             fakeDataModelAddr = baseAddr + offsets::FakeDataModelPointer;
@@ -138,10 +137,10 @@ int main() {
         }
         frameCounter++;
 
-        auto viewMatrix = Globals::renderEngine.GetViewMat(); // Get matrix first to pass to menu
+        auto viewMatrix = Globals::renderEngine.GetViewMat();
 
         overlay.BeginFrame();
-        overlay.RenderMenu(viewMatrix); // Passed to Menu for Radar
+        overlay.RenderMenu(); // [FIXED] Removed the viewMatrix parameter 
 
         ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
@@ -159,8 +158,9 @@ int main() {
             lastTime = currentTime;
         }
 
+        // Clean Solid Watermark (RGB Removed)
         if (Vars::showWatermark) {
-            std::string watermark = "dolphin.club | EX | FPS: " + std::to_string(fps);
+            std::string watermark = "Premium Roblox External | FPS: " + std::to_string(fps);
             ImVec2 textSize = ImGui::CalcTextSize(watermark.c_str());
             float screenW = static_cast<float>(GetSystemMetrics(SM_CXSCREEN));
             float paddingX = 12.0f;
@@ -169,7 +169,7 @@ int main() {
             ImVec2 boxMax(screenW - 20, 20 + textSize.y + (paddingY * 2));
 
             drawList->AddRectFilled(boxMin, boxMax, IM_COL32(20, 20, 22, 240), 6.0f);
-            drawList->AddRectFilled(ImVec2(boxMin.x + 1, boxMin.y + 1), ImVec2(boxMax.x - 1, boxMin.y + 3), IM_COL32(100, 150, 255, 255), 6.0f); // Blue Accent
+            drawList->AddRectFilled(ImVec2(boxMin.x + 1, boxMin.y + 1), ImVec2(boxMax.x - 1, boxMin.y + 3), IM_COL32(100, 150, 255, 255), 6.0f);
             drawList->AddRect(boxMin, boxMax, IM_COL32(50, 50, 55, 255), 6.0f);
 
             ImVec2 textPos(boxMin.x + paddingX, boxMin.y + paddingY + 2);

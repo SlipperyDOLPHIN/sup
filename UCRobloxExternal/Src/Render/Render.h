@@ -9,6 +9,7 @@
 #include "../Core/Config/Config.h" 
 #include "../Core/Cache/Cache.h"         
 #include "../Core/Features/Aimbot/Aimbot.h" 
+#include <cmath>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -182,15 +183,13 @@ public:
         ImGui::NewFrame();
     }
 
-    // [FIXED] Added const RBX::Mat4& viewMatrix parameter to match Main.cpp
-    void RenderMenu(const RBX::Mat4& viewMatrix) {
+    // [FIXED] Removed the unreferenced viewMatrix argument
+    void RenderMenu() {
 
-        // 2D RADAR WINDOW
         if (Vars::Radar::enabled) {
             ImGui::SetNextWindowPos(ImVec2(20, 300), ImGuiCond_FirstUseEver);
             ImGui::SetNextWindowSize(ImVec2(Vars::Radar::size, Vars::Radar::size));
 
-            // Transparent floating window
             ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
@@ -203,15 +202,8 @@ public:
 
                 drawList->AddCircleFilled(center, radius, IM_COL32(20, 20, 22, 220), 64);
 
-                // RGB Rainbow Outline for Radar
-                static float radarHue = 0.0f;
-                radarHue += 0.002f;
-                if (radarHue > 1.0f) radarHue -= 1.0f;
-                ImVec4 rgbColor;
-                ImGui::ColorConvertHSVtoRGB(radarHue, 0.8f, 0.9f, rgbColor.x, rgbColor.y, rgbColor.z);
-                rgbColor.w = 1.0f;
-
-                drawList->AddCircle(center, radius, ImGui::ColorConvertFloat4ToU32(rgbColor), 64, 3.0f);
+                // [FIXED] Reverted RGB loop back to solid blue
+                drawList->AddCircle(center, radius, IM_COL32(100, 150, 255, 255), 64, 3.0f);
 
                 drawList->AddLine(ImVec2(center.x, center.y - radius), ImVec2(center.x, center.y + radius), IM_COL32(60, 60, 65, 150));
                 drawList->AddLine(ImVec2(center.x - radius, center.y), ImVec2(center.x + radius, center.y), IM_COL32(60, 60, 65, 150));
@@ -240,26 +232,25 @@ public:
                         blipCol = ImGui::ColorConvertFloat4ToU32(ImVec4(Vars::ESP::targetHighlightColor[0], Vars::ESP::targetHighlightColor[1], Vars::ESP::targetHighlightColor[2], Vars::ESP::targetHighlightColor[3]));
                     }
 
-                    float distFromCenter = sqrt((rX - center.x) * (rX - center.x) + (rY - center.y) * (rY - center.y));
+                    // [FIXED] Explicit float math calls
+                    float distFromCenter = sqrtf((rX - center.x) * (rX - center.x) + (rY - center.y) * (rY - center.y));
 
                     if (distFromCenter < radius - Vars::Radar::blipSize) {
                         drawList->AddCircleFilled(ImVec2(rX, rY), Vars::Radar::blipSize, blipCol);
                     }
                     else if (plr.distance <= Vars::Radar::range * 1.5f) {
-                        // Clamp to edge
-                        float angle = atan2(rY - center.y, rX - center.x);
-                        float clampX = center.x + cos(angle) * (radius - Vars::Radar::blipSize);
-                        float clampY = center.y + sin(angle) * (radius - Vars::Radar::blipSize);
+                        float angle = atan2f(rY - center.y, rX - center.x);
+                        float clampX = center.x + cosf(angle) * (radius - Vars::Radar::blipSize);
+                        float clampY = center.y + sinf(angle) * (radius - Vars::Radar::blipSize);
                         drawList->AddCircleFilled(ImVec2(clampX, clampY), Vars::Radar::blipSize, blipCol);
                     }
                 }
             }
             ImGui::End();
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar();
             ImGui::PopStyleColor();
         }
 
-        // HUD OVERLAY
         if (Vars::showHUD) {
             ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
             ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.11f, 0.7f));
@@ -293,7 +284,7 @@ public:
         if (!Vars::menuOpen) return;
 
         ImGui::SetNextWindowSize(ImVec2(700, 560), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Roblox Premium External", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("dolphin.club | EX", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
 
@@ -496,7 +487,7 @@ public:
             if (Vars::ESP::healthBar) {
                 ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText);
             }
-            ImGui::Checkbox("Text BG", &Vars::ESP::textBackground);
+            ImGui::Checkbox("Text Background", &Vars::ESP::textBackground);
             ImGui::Spacing();
 
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
