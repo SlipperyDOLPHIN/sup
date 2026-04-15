@@ -44,9 +44,11 @@ inline std::string GetKeyName(int vk) {
 inline void HotkeyButton(const char* label, int* key, bool& isWaiting) {
     ImGui::Text("%s", label);
     ImGui::SameLine();
+    ImGui::PushID(label);
     if (ImGui::Button(isWaiting ? "[Press Any Key]" : GetKeyName(*key).c_str(), ImVec2(100, 25))) {
         isWaiting = true;
     }
+    ImGui::PopID();
     if (isWaiting) {
         for (int i = 1; i < 255; i++) {
             if (i == VK_LWIN || i == VK_RWIN) continue;
@@ -224,6 +226,10 @@ public:
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX11_Init(d3dDevice, d3dContext);
 
+        if (Vars::Misc::useCustomFont) {
+            io.Fonts->AddFontFromFileTTF(Vars::Misc::customFontPath, Vars::Misc::fontSize);
+        }
+
         Config::Load();
 
         return true;
@@ -379,8 +385,8 @@ public:
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
 
         ImVec2 buttonSize(130, 40);
-        const char* tabs[] = { "Aimbot", "Visuals", "Local", "Settings" };
-        for (int i = 0; i < 4; i++) {
+        const char* tabs[] = { "Aimbot", "Visuals", "Local", "Misc", "Settings" };
+        for (int i = 0; i < 5; i++) {
             ImGui::SetCursorPosX(15);
             if (Vars::selectedTab == i) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.5f, 0.85f, 1.0f));
@@ -402,7 +408,7 @@ public:
         ImGui::SameLine();
         ImGui::BeginChild("Content", ImVec2(0, 0), true);
 
-        static bool waitAim = false, waitTrig = false, waitClick = false;
+        static bool waitAim = false, waitTrig = false, waitClick = false, waitNoclip = false, waitInfJump = false, waitMenu = false, waitPanic = false;
 
         if (Vars::selectedTab == 0) {
             ImGui::Text("Aimbot"); ImGui::Separator(); ImGui::Spacing();
@@ -420,6 +426,7 @@ public:
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "TriggerBot");
             ImGui::Checkbox("Enable TriggerBot", &Vars::TriggerBot::enabled);
+            ImGui::SameLine(); ImGui::Checkbox("Randomize##Trig", &Vars::TriggerBot::randomizeDelay);
             HotkeyButton("Trigger Hotkey", &Vars::TriggerBot::triggerKey, waitTrig);
             if (Vars::TriggerBot::enabled) {
                 ImGui::SliderFloat("Hitbox Radius", &Vars::TriggerBot::triggerDistance, 5.0f, 50.0f, "%.1f px");
@@ -429,6 +436,7 @@ public:
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Auto-Clicker");
             ImGui::Checkbox("Enable AutoClicker", &Vars::AutoClicker::enabled);
+            ImGui::SameLine(); ImGui::Checkbox("Randomize##Click", &Vars::AutoClicker::randomizeDelay);
             HotkeyButton("Clicker Hotkey", &Vars::AutoClicker::clickKey, waitClick);
             if (Vars::AutoClicker::enabled) {
                 ImGui::SliderInt("Min CPS", &Vars::AutoClicker::minCPS, 1, 30);
@@ -463,6 +471,7 @@ public:
             ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
             ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
             ImGui::Checkbox("Show NPCs/Bots", &Vars::ESP::showNPCs);
+            ImGui::Checkbox("Health Coloring", &Vars::ESP::healthColoring);
             ImGui::Text("Max Render Distance");
             ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
 
@@ -496,7 +505,6 @@ public:
             ImGui::Checkbox("Boxes", &Vars::ESP::boxes);
             if (Vars::ESP::boxes) {
                 const char* boxStyles[] = { "Full Box", "Corner Box" };
-                // [FIXED] Explicit int cast to remove compiler warning
                 ImGui::Combo("##BoxStyle", &Vars::ESP::boxStyle, boxStyles, 2);
                 ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
                 ImGui::Checkbox("Box Fill", &Vars::ESP::boxFill);
@@ -532,7 +540,6 @@ public:
             ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
             if (Vars::ESP::snaplines) {
                 const char* linePos[] = { "Bottom", "Center", "Top" };
-                // [FIXED] Explicit int cast to remove compiler warning
                 ImGui::Combo("##LinePos", &Vars::ESP::snaplinePos, linePos, 3);
                 ImGui::ColorEdit4("Line Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
             }
@@ -567,58 +574,72 @@ public:
             ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "%.0f");
 
             ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Movement Hacks");
+            ImGui::Checkbox("Noclip", &Vars::Local::noclipEnabled);
+            ImGui::Checkbox("Infinite Jump", &Vars::Local::infiniteJumpEnabled);
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
             ImGui::Text("Camera");
             ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
             ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
         }
         else if (Vars::selectedTab == 3) {
+            ImGui::Text("Miscellaneous"); ImGui::Separator(); ImGui::Spacing();
+            ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);
+            ImGui::Checkbox("Spectator Warning", &Vars::Misc::spectatorWarning);
+            ImGui::Checkbox("Anti-Mod / Staff Detect", &Vars::Misc::antiMod);
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "UI Customization");
+            ImGui::Checkbox("Use Custom Font", &Vars::Misc::useCustomFont);
+            if (Vars::Misc::useCustomFont) {
+                ImGui::InputText("Font Path", Vars::Misc::customFontPath, MAX_PATH);
+                ImGui::SliderFloat("Font Size", &Vars::Misc::fontSize, 8.0f, 24.0f, "%.1f");
+                if (ImGui::Button("Reload Font")) {
+                    Notify::Add("Font reload requires restart", ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+                }
+            }
+
+            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Global Hotkeys");
+            HotkeyButton("Menu Toggle", &Vars::Misc::Hotkeys::menuKey, waitMenu);
+            HotkeyButton("Panic Key", &Vars::Misc::Hotkeys::panicKey, waitPanic);
+            HotkeyButton("Noclip Key", &Vars::Misc::Hotkeys::noclipKey, waitNoclip);
+            HotkeyButton("Inf Jump Key", &Vars::Misc::Hotkeys::infiniteJumpKey, waitInfJump);
+        }
+        else if (Vars::selectedTab == 4) {
             ImGui::Text("Settings & Multi-Config"); ImGui::Separator(); ImGui::Spacing();
-
+            // ... (rest of settings tab)
             if (ImGui::Button("Refresh Config List", ImVec2(180, 25))) { Config::RefreshConfigs(); Notify::Add("Configs Refreshed", ImVec4(0.4f, 0.8f, 1.0f, 1.0f)); }
-
+            
             if (Vars::Configs::list.empty()) Config::RefreshConfigs();
-
             std::vector<const char*> configNames;
             for (auto& s : Vars::Configs::list) configNames.push_back(s.c_str());
-
-            // [FIXED] Explicit int cast to fix standard library conversion warning
             ImGui::Combo("##ConfigList", &Vars::Configs::selectedIndex, configNames.data(), static_cast<int>(configNames.size()));
 
             if (ImGui::Button("Load Selected", ImVec2(100, 30))) { Config::Load(); Notify::Add("Config Loaded!", ImVec4(1.0f, 0.8f, 0.2f, 1.0f)); }
             ImGui::SameLine();
             if (ImGui::Button("Save Selected", ImVec2(100, 30))) { Config::Save(); Notify::Add("Config Overwritten!", ImVec4(0.4f, 1.0f, 0.4f, 1.0f)); }
-
+            
             ImGui::Spacing();
-            ImGui::InputText("##NewName", Vars::Configs::newConfigName, 64);
-            if (ImGui::Button("Create New File", ImVec2(120, 30))) {
-                std::string fname(Vars::Configs::newConfigName);
-                if (fname.length() > 0) {
-                    if (fname.find(".ini") == std::string::npos) fname += ".ini";
-                    Config::Save(fname);
-                    Vars::Configs::newConfigName[0] = '\0';
-                    Notify::Add("New Config Created!", ImVec4(0.2f, 1.0f, 0.8f, 1.0f));
-                }
-            }
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Core Systems");
-            if (ImGui::Button("Force Refresh Cache", ImVec2(180, 30))) {
-                Vars::Misc::forceRefresh = true;
-                Notify::Add("Core Cache Refreshed!", ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
-            }
-            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Use this if ESP freezes or you teleport/die and players stop updating.");
-
+            if (ImGui::Button("Force Refresh Cache", ImVec2(180, 30))) { Vars::Misc::forceRefresh = true; }
             if (ImGui::Button("Panic / Exit Cheat", ImVec2(180, 30))) { Vars::Misc::exitCheat = true; }
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "[p100 Features");
-            ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);
-            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hides the cheat overlay from screen recording software (OBS, Discord, etc.)");
         }
 
         ImGui::EndChild();
         ImGui::End();
+
+        if (Vars::Misc::antiMod && PlayerCache::moderatorInServer) {
+            ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 2.0f, 100.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.8f, 0.0f, 0.0f, 0.8f));
+            if (ImGui::Begin("StaffWarning", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoInputs)) {
+                ImGui::Text("!!! STAFF DETECTED IN SERVER !!!");
+                ImGui::Text("Name: %s", PlayerCache::moderatorName.c_str());
+            }
+            ImGui::End();
+            ImGui::PopStyleColor();
+        }
+
         Notify::Render();
     }
 

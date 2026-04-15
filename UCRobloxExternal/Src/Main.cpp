@@ -21,6 +21,8 @@ bool IsGameRunning(const wchar_t* windowTitle)
 std::atomic<bool> running(true);
 
 void LocalPlayerThread() {
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+    bool lastNoclip = false;
     while (running) {
         try {
             if (Globals::camera.Addr != 0 && Vars::Local::fovChangerEnabled) {
@@ -45,6 +47,25 @@ void LocalPlayerThread() {
 
             if (Vars::Local::jumpEnabled) {
                 RBX::ModifyJumpPower(humanoid, Vars::Local::jumpPower);
+            }
+
+            if (Vars::Local::noclipEnabled) {
+                RBX::SetCanCollide(character, false);
+                lastNoclip = true;
+            }
+            else if (lastNoclip) {
+                RBX::SetCanCollide(character, true);
+                lastNoclip = false;
+            }
+
+            if (Vars::Local::infiniteJumpEnabled) {
+                if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
+                    Coms->WriteMemory<uint8_t>(humanoid.Addr + offsets::Sit, 0); // Unsit if sitting
+                    // Setting HumanoidState to Jump (3) or just setting Jump property
+                    // Offset for Jump property is often around 0x1DC (Sit)
+                    // Let's try writing to the jump state
+                    Coms->WriteMemory<int>(humanoid.Addr + 0x1B8, 1); // Jump flag
+                }
             }
 
         }
@@ -104,6 +125,12 @@ int main() {
             break;
         }
 
+        // --- Anti-Mod Auto Exit ---
+        if (Vars::Misc::antiMod && PlayerCache::moderatorInServer) {
+            Notify::Add("STAFF DETECTED - EMERGENCY EXITING", ImVec4(1.0f, 0.2f, 0.2f, 1.0f), 5.0f);
+            Vars::Misc::exitCheat = true;
+        }
+
         if (Vars::Misc::forceRefresh) {
             PlayerCache::players.clear();
             fakeDataModelAddr = baseAddr + offsets::FakeDataModelPointer;
@@ -124,8 +151,23 @@ int main() {
             Vars::Misc::forceRefresh = false;
         }
 
-        if (GetAsyncKeyState(VK_INSERT) & 1) {
+        // --- Hotkey Manager ---
+        if (Vars::Misc::Hotkeys::menuKey != 0 && GetAsyncKeyState(Vars::Misc::Hotkeys::menuKey) & 1) {
             Vars::menuOpen = !Vars::menuOpen;
+        }
+
+        if (Vars::Misc::Hotkeys::panicKey != 0 && GetAsyncKeyState(Vars::Misc::Hotkeys::panicKey) & 1) {
+            Vars::Misc::exitCheat = true;
+        }
+
+        if (Vars::Misc::Hotkeys::noclipKey != 0 && GetAsyncKeyState(Vars::Misc::Hotkeys::noclipKey) & 1) {
+            Vars::Local::noclipEnabled = !Vars::Local::noclipEnabled;
+            Notify::Add(Vars::Local::noclipEnabled ? "Noclip Enabled" : "Noclip Disabled", Vars::Local::noclipEnabled ? ImVec4(0.4f, 1.0f, 0.4f, 1.0f) : ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+        }
+
+        if (Vars::Misc::Hotkeys::infiniteJumpKey != 0 && GetAsyncKeyState(Vars::Misc::Hotkeys::infiniteJumpKey) & 1) {
+            Vars::Local::infiniteJumpEnabled = !Vars::Local::infiniteJumpEnabled;
+            Notify::Add(Vars::Local::infiniteJumpEnabled ? "Infinite Jump Enabled" : "Infinite Jump Disabled", Vars::Local::infiniteJumpEnabled ? ImVec4(0.4f, 1.0f, 0.4f, 1.0f) : ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
         }
 
         if (Vars::Misc::streamProof) {

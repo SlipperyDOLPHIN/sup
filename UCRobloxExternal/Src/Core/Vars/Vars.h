@@ -48,6 +48,7 @@ namespace Vars {
 
     namespace TriggerBot {
         inline bool enabled = false;
+        inline bool randomizeDelay = true;
         inline int triggerKey = 18;
         inline float triggerDistance = 15.0f;
         inline int clickDelay = 50;
@@ -55,6 +56,7 @@ namespace Vars {
 
     namespace AutoClicker {
         inline bool enabled = false;
+        inline bool randomizeDelay = true;
         inline int clickKey = 0;
         inline int minCPS = 10;
         inline int maxCPS = 14;
@@ -64,6 +66,7 @@ namespace Vars {
         inline bool enabled = false;
         inline bool teamCheck = false;
         inline bool showNPCs = false;
+        inline bool healthColoring = true;
 
         inline bool items = false;
         inline float maxItemDistance = 300.0f;
@@ -120,11 +123,27 @@ namespace Vars {
         inline float jumpPower = 50.0f;
         inline bool fovChangerEnabled = false;
         inline float cameraFOV = 70.0f;
+        inline bool noclipEnabled = false;
+        inline bool infiniteJumpEnabled = false;
     }
 
     namespace Misc {
         inline bool streamProof = false;
         inline bool forceRefresh = false;
         inline bool exitCheat = false;
+        
+        inline bool spectatorWarning = false;
+        inline bool antiMod = false;
+        
+        inline bool useCustomFont = false;
+        inline char customFontPath[MAX_PATH] = "C:\\Windows\\Fonts\\tahoma.ttf";
+        inline float fontSize = 14.0f;
+
+        namespace Hotkeys {
+            inline int noclipKey = 0;
+            inline int infiniteJumpKey = 0;
+            inline int menuKey = VK_INSERT;
+            inline int panicKey = VK_END;
+        }
     }
 }

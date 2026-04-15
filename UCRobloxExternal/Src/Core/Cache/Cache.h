@@ -27,6 +27,8 @@ namespace PlayerCache {
 
         bool isValid;
         bool isNPC;
+        bool isModerator;
+        bool isSpectatingLocal;
     };
 
     struct CachedItem {
@@ -41,6 +43,12 @@ namespace PlayerCache {
     inline RBX::Vec3 localPlayerPos;
     inline RBX::CFrame localPlayerCFrame;
     inline uintptr_t localPlayerTeam = 0;
+    inline uintptr_t localCharAddr = 0;
+
+    inline bool moderatorInServer = false;
+    inline std::string moderatorName = "";
+    inline bool beingSpectated = false;
+    inline std::string spectatorName = "";
 
     inline auto lastUpdate = std::chrono::high_resolution_clock::now();
 
@@ -58,6 +66,7 @@ namespace PlayerCache {
 
             auto localChar = Globals::localPlayer.GetModelRef();
             if (localChar.Addr == 0) return;
+            localCharAddr = localChar.Addr;
 
             auto localRoot = localChar.FindChild("HumanoidRootPart");
             if (localRoot.Addr == 0) localRoot = localChar.FindChild("Torso");
@@ -69,6 +78,9 @@ namespace PlayerCache {
             localPlayerCFrame = localRoot.GetCFrame();
 
             for (auto& cached : players) { cached.isValid = false; }
+            
+            moderatorInServer = false;
+            beingSpectated = false;
 
             // --- REAL PLAYERS ---
             for (auto& plr : playerList) {
@@ -87,8 +99,14 @@ namespace PlayerCache {
                     newPlayer.playerAddr = plr.Addr;
                     newPlayer.isNPC = false;
                     newPlayer.name = plr.GetName();
+                    newPlayer.isModerator = RBX::IsModerator(newPlayer.name);
                     players.push_back(newPlayer);
                     existingPlayer = &players.back();
+                }
+
+                if (existingPlayer->isModerator) {
+                    moderatorInServer = true;
+                    moderatorName = existingPlayer->name;
                 }
 
                 existingPlayer->teamAddr = Coms->ReadMemory<uintptr_t>(plr.Addr + offsets::Team);
@@ -106,6 +124,17 @@ namespace PlayerCache {
                 if (rootPart.Addr == 0) rootPart = character.FindChild("UpperTorso");
                 if (rootPart.Addr == 0) rootPart = character.FindChild("Head");
                 if (rootPart.Addr == 0) continue;
+
+                // Spectator Check (Proximity based)
+                if (Vars::Misc::spectatorWarning) {
+                    float dist = rootPart.CalcDistance(localPlayerPos);
+                    float vel = sqrtf(existingPlayer->velocity.X * existingPlayer->velocity.X + existingPlayer->velocity.Y * existingPlayer->velocity.Y + existingPlayer->velocity.Z * existingPlayer->velocity.Z);
+                    
+                    if (dist < 10.0f && vel < 1.0f) {
+                        beingSpectated = true;
+                        spectatorName = existingPlayer->name;
+                    }
+                }
 
                 auto tool = character.FindChildByClass("Tool");
                 if (tool.Addr != 0) {

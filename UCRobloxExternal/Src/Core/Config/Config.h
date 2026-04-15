@@ -75,6 +75,14 @@ namespace Config {
         WriteBool("Global", "showWatermark", Vars::showWatermark, f);
         WriteBool("Global", "showPlayerList", Vars::showPlayerList, f);
         WriteBool("Misc", "streamProof", Vars::Misc::streamProof, f);
+        WriteBool("Misc", "spectatorWarning", Vars::Misc::spectatorWarning, f);
+        WriteBool("Misc", "antiMod", Vars::Misc::antiMod, f);
+        WriteBool("Misc", "useCustomFont", Vars::Misc::useCustomFont, f);
+        WriteFloat("Misc", "fontSize", Vars::Misc::fontSize, f);
+        WriteInt("Hotkeys", "noclipKey", Vars::Misc::Hotkeys::noclipKey, f);
+        WriteInt("Hotkeys", "infiniteJumpKey", Vars::Misc::Hotkeys::infiniteJumpKey, f);
+        WriteInt("Hotkeys", "menuKey", Vars::Misc::Hotkeys::menuKey, f);
+        WriteInt("Hotkeys", "panicKey", Vars::Misc::Hotkeys::panicKey, f);
 
         WriteBool("Radar", "enabled", Vars::Radar::enabled, f);
         WriteFloat("Radar", "range", Vars::Radar::range, f);
@@ -99,11 +107,13 @@ namespace Config {
         WriteColor("Aimbot", "fovColor", Vars::Aimbot::fovColor, f);
 
         WriteBool("TriggerBot", "enabled", Vars::TriggerBot::enabled, f);
+        WriteBool("TriggerBot", "randomizeDelay", Vars::TriggerBot::randomizeDelay, f);
         WriteInt("TriggerBot", "triggerKey", Vars::TriggerBot::triggerKey, f);
         WriteFloat("TriggerBot", "triggerDistance", Vars::TriggerBot::triggerDistance, f);
         WriteInt("TriggerBot", "clickDelay", Vars::TriggerBot::clickDelay, f);
 
         WriteBool("AutoClicker", "enabled", Vars::AutoClicker::enabled, f);
+        WriteBool("AutoClicker", "randomizeDelay", Vars::AutoClicker::randomizeDelay, f);
         WriteInt("AutoClicker", "clickKey", Vars::AutoClicker::clickKey, f);
         WriteInt("AutoClicker", "minCPS", Vars::AutoClicker::minCPS, f);
         WriteInt("AutoClicker", "maxCPS", Vars::AutoClicker::maxCPS, f);
@@ -111,6 +121,7 @@ namespace Config {
         WriteBool("ESP", "enabled", Vars::ESP::enabled, f);
         WriteBool("ESP", "teamCheck", Vars::ESP::teamCheck, f);
         WriteBool("ESP", "showNPCs", Vars::ESP::showNPCs, f);
+        WriteBool("ESP", "healthColoring", Vars::ESP::healthColoring, f);
         WriteBool("ESP", "items", Vars::ESP::items, f);
         WriteFloat("ESP", "maxItemDistance", Vars::ESP::maxItemDistance, f);
         WriteColor("ESP", "itemColor", Vars::ESP::itemColor, f);
@@ -154,7 +165,11 @@ namespace Config {
         WriteBool("Local", "jumpEnabled", Vars::Local::jumpEnabled, f);
         WriteFloat("Local", "jumpPower", Vars::Local::jumpPower, f);
         WriteBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, f);
-        WriteFloat("Local", "cameraFOV", Vars::Local::cameraFOV, f);
+        WriteBool("Local", "cameraFOV", Vars::Local::cameraFOV, f);
+        WriteBool("Local", "noclipEnabled", Vars::Local::noclipEnabled, f);
+        WriteBool("Local", "infiniteJumpEnabled", Vars::Local::infiniteJumpEnabled, f);
+
+        WritePrivateProfileStringA("Misc", "customFontPath", Vars::Misc::customFontPath, f.c_str());
 
         if (!specificName.empty()) RefreshConfigs();
     }
@@ -165,6 +180,14 @@ namespace Config {
         Vars::showWatermark = ReadBool("Global", "showWatermark", Vars::showWatermark, f);
         Vars::showPlayerList = ReadBool("Global", "showPlayerList", Vars::showPlayerList, f);
         Vars::Misc::streamProof = ReadBool("Misc", "streamProof", Vars::Misc::streamProof, f);
+        Vars::Misc::spectatorWarning = ReadBool("Misc", "spectatorWarning", Vars::Misc::spectatorWarning, f);
+        Vars::Misc::antiMod = ReadBool("Misc", "antiMod", Vars::Misc::antiMod, f);
+        Vars::Misc::useCustomFont = ReadBool("Misc", "useCustomFont", Vars::Misc::useCustomFont, f);
+        Vars::Misc::fontSize = ReadFloat("Misc", "fontSize", Vars::Misc::fontSize, f);
+        Vars::Misc::Hotkeys::noclipKey = ReadInt("Hotkeys", "noclipKey", Vars::Misc::Hotkeys::noclipKey, f);
+        Vars::Misc::Hotkeys::infiniteJumpKey = ReadInt("Hotkeys", "infiniteJumpKey", Vars::Misc::Hotkeys::infiniteJumpKey, f);
+        Vars::Misc::Hotkeys::menuKey = ReadInt("Hotkeys", "menuKey", Vars::Misc::Hotkeys::menuKey, f);
+        Vars::Misc::Hotkeys::panicKey = ReadInt("Hotkeys", "panicKey", Vars::Misc::Hotkeys::panicKey, f);
 
         Vars::Radar::enabled = ReadBool("Radar", "enabled", Vars::Radar::enabled, f);
         Vars::Radar::range = ReadFloat("Radar", "range", Vars::Radar::range, f);
@@ -245,5 +268,9 @@ namespace Config {
         Vars::Local::jumpPower = ReadFloat("Local", "jumpPower", Vars::Local::jumpPower, f);
         Vars::Local::fovChangerEnabled = ReadBool("Local", "fovChangerEnabled", Vars::Local::fovChangerEnabled, f);
         Vars::Local::cameraFOV = ReadFloat("Local", "cameraFOV", Vars::Local::cameraFOV, f);
+        Vars::Local::noclipEnabled = ReadBool("Local", "noclipEnabled", Vars::Local::noclipEnabled, f);
+        Vars::Local::infiniteJumpEnabled = ReadBool("Local", "infiniteJumpEnabled", Vars::Local::infiniteJumpEnabled, f);
+
+        GetPrivateProfileStringA("Misc", "customFontPath", Vars::Misc::customFontPath, Vars::Misc::customFontPath, MAX_PATH, f.c_str());
     }
 }

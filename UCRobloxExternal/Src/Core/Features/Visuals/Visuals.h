@@ -54,6 +54,12 @@ namespace Visuals {
             ImU32 boxCol = isTarget ? targetHighCol : baseBoxCol;
             ImU32 skelCol = isTarget ? targetHighCol : baseSkelCol;
 
+            if (!isTarget && Vars::ESP::healthColoring && Vars::ESP::healthBar) {
+                float hpPerc = std::clamp(plr.health / plr.maxHealth, 0.0f, 1.0f);
+                boxCol = IM_COL32(255 * (1.0f - hpPerc), 255 * hpPerc, 0, 255);
+                skelCol = boxCol;
+            }
+
             auto character = RBX::RbxInstance(plr.characterAddr);
             auto head = character.FindChild("Head");
             auto torso = character.FindChild("Torso");
@@ -84,6 +90,7 @@ namespace Visuals {
                 bool isOffScreen = (screenPos.X <= 0 || screenPos.Y <= 0 || screenPos.X >= screenSize.x || screenPos.Y >= screenSize.y || clipW < 0.1f);
 
                 if (isOffScreen) {
+                    RBX::Vec2 arrowScreenPos = screenPos;
                     if (clipW < 0.1f) {
                         clipX *= -1.0f;
                         clipY *= -1.0f;
@@ -95,6 +102,10 @@ namespace Visuals {
                     float arrWidth = arrSize * 0.6f;
 
                     ImVec2 p1 = ImVec2(screenCenter.x + cosf(angle) * radius, screenCenter.y + sinf(angle) * radius);
+                    
+                    // Clamp to screen edges if radius is too large
+                    p1.x = std::clamp(p1.x, 20.0f, screenSize.x - 20.0f);
+                    p1.y = std::clamp(p1.y, 20.0f, screenSize.y - 20.0f);
 
                     ImVec2 dir = ImVec2(cosf(angle), sinf(angle));
                     ImVec2 norm = ImVec2(-sinf(angle), cosf(angle));
@@ -104,7 +115,7 @@ namespace Visuals {
                     ImVec2 p3 = ImVec2(base.x + norm.x * arrWidth, base.y + norm.y * arrWidth);
 
                     drawList->AddTriangleFilled(p1, p2, p3, arrCol);
-                    drawList->AddTriangle(p1, p2, p3, IM_COL32(0, 0, 0, 255), 1.5f);
+                    drawList->AddTriangle(p1, p2, p3, IM_COL32(0, 0, 0, 255), 1.0f);
                 }
             }
 
@@ -423,26 +434,51 @@ namespace Visuals {
                 }
             }
 
-            if (Vars::ESP::skeleton && torso.Addr != 0 && leftArm.Addr != 0 && rightArm.Addr != 0 && leftLeg.Addr != 0 && rightLeg.Addr != 0) {
+            if (Vars::ESP::skeleton) {
                 RBX::Vec2 head2D = W2S::WorldToScreen(head.GetPos(), viewMatrix);
                 RBX::Vec2 torso2D = W2S::WorldToScreen(torso.GetPos(), viewMatrix);
-                RBX::Vec2 lArm2D = W2S::WorldToScreen(leftArm.GetPos(), viewMatrix);
-                RBX::Vec2 rArm2D = W2S::WorldToScreen(rightArm.GetPos(), viewMatrix);
-                RBX::Vec2 lLeg2D = W2S::WorldToScreen(leftLeg.GetPos(), viewMatrix);
-                RBX::Vec2 rLeg2D = W2S::WorldToScreen(rightLeg.GetPos(), viewMatrix);
+                
+                if (head2D.X != 0 && torso2D.X != 0) {
+                    auto DrawBone = [&](RBX::RbxInstance a, RBX::RbxInstance b) {
+                        RBX::Vec2 p1 = W2S::WorldToScreen(a.GetPos(), viewMatrix);
+                        RBX::Vec2 p2 = W2S::WorldToScreen(b.GetPos(), viewMatrix);
+                        if (p1.X != 0 && p2.X != 0) {
+                            drawList->AddLine(ImVec2(p1.X, p1.Y), ImVec2(p2.X, p2.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+                            drawList->AddLine(ImVec2(p1.X, p1.Y), ImVec2(p2.X, p2.Y), skelCol, Vars::ESP::skeletonThickness);
+                        }
+                    };
 
-                if (head2D.X != 0 && torso2D.X != 0 && lArm2D.X != 0 && rArm2D.X != 0 && lLeg2D.X != 0 && rLeg2D.X != 0) {
-                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), IM_COL32(0, 0, 0, 255), Vars::ESP::skeletonThickness + 2.0f);
+                    DrawBone(head, torso);
 
-                    drawList->AddLine(ImVec2(head2D.X, head2D.Y), ImVec2(torso2D.X, torso2D.Y), skelCol, Vars::ESP::skeletonThickness);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lArm2D.X, lArm2D.Y), skelCol, Vars::ESP::skeletonThickness);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rArm2D.X, rArm2D.Y), skelCol, Vars::ESP::skeletonThickness);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(lLeg2D.X, lLeg2D.Y), skelCol, Vars::ESP::skeletonThickness);
-                    drawList->AddLine(ImVec2(torso2D.X, torso2D.Y), ImVec2(rLeg2D.X, rLeg2D.Y), skelCol, Vars::ESP::skeletonThickness);
+                    if (isR6) {
+                        if (leftArm.Addr != 0) DrawBone(torso, leftArm);
+                        if (rightArm.Addr != 0) DrawBone(torso, rightArm);
+                        if (leftLeg.Addr != 0) DrawBone(torso, leftLeg);
+                        if (rightLeg.Addr != 0) DrawBone(torso, rightLeg);
+                    }
+                    else {
+                        auto lowerTorso = character.FindChild("LowerTorso");
+                        auto lUA = character.FindChild("LeftUpperArm");
+                        auto lLA = character.FindChild("LeftLowerArm");
+                        auto lH = character.FindChild("LeftHand");
+                        auto rUA = character.FindChild("RightUpperArm");
+                        auto rLA = character.FindChild("RightLowerArm");
+                        auto rH = character.FindChild("RightHand");
+                        auto lUL = character.FindChild("LeftUpperLeg");
+                        auto lLL = character.FindChild("LeftLowerLeg");
+                        auto lF = character.FindChild("LeftFoot");
+                        auto rUL = character.FindChild("RightUpperLeg");
+                        auto rLL = character.FindChild("RightLowerLeg");
+                        auto rF = character.FindChild("RightFoot");
+
+                        if (lowerTorso.Addr != 0) {
+                            DrawBone(torso, lowerTorso);
+                            if (lUL.Addr != 0) { DrawBone(lowerTorso, lUL); DrawBone(lUL, lLL); DrawBone(lLL, lF); }
+                            if (rUL.Addr != 0) { DrawBone(lowerTorso, rUL); DrawBone(rUL, rLL); DrawBone(rLL, rF); }
+                        }
+                        if (lUA.Addr != 0) { DrawBone(torso, lUA); DrawBone(lUA, lLA); DrawBone(lLA, lH); }
+                        if (rUA.Addr != 0) { DrawBone(torso, rUA); DrawBone(rUA, rLA); DrawBone(rLA, rH); }
+                    }
                 }
             }
 

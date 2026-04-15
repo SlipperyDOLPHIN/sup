@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <algorithm>
+#include <cctype>
+#include <thread>
+#include <chrono>
 
 namespace RBX {
 
@@ -58,6 +62,7 @@ namespace RBX {
         RbxInstance(uintptr_t addr) : Addr(addr) {}
 
         std::string GetName() {
+            if (Addr == 0) return "";
             uintptr_t namePtr = Coms->ReadMemory<uintptr_t>(Addr + offsets::Name);
             if (namePtr == 0) return "";
             
@@ -65,10 +70,10 @@ namespace RBX {
         }
 
         std::string GetClass() {
+            if (Addr == 0) return "";
             uintptr_t classDesc = Coms->ReadMemory<uintptr_t>(Addr + offsets::ClassDescriptor);
             if (classDesc == 0) return "";
 
-            
             uintptr_t namePtr = Coms->ReadMemory<uintptr_t>(classDesc + offsets::ClassDescriptorToClassName);
             if (namePtr == 0) return "";
             
@@ -76,98 +81,100 @@ namespace RBX {
         }
 
         RbxInstance GetParent() {
+            if (Addr == 0) return RbxInstance(0);
             return RbxInstance(Coms->ReadMemory<uintptr_t>(Addr + offsets::Parent));
         }
 
-
         std::vector<RbxInstance> GetChildList() {
             std::vector<RbxInstance> childList;
+            if (Addr == 0) return childList;
             
             uintptr_t childStart = Coms->ReadMemory<uintptr_t>(Addr + offsets::Children);
-            uintptr_t childEnd = Coms->ReadMemory<uintptr_t>(childStart + offsets::ChildrenEnd);
+            if (childStart == 0) return childList;
 
+            uintptr_t childEnd = Coms->ReadMemory<uintptr_t>(childStart + offsets::ChildrenEnd);
+            uintptr_t currentPtr = Coms->ReadMemory<uintptr_t>(childStart);
+
+            if (currentPtr == 0 || childEnd == 0 || currentPtr == childEnd) return childList;
             
-            for (uintptr_t ptr = Coms->ReadMemory<uintptr_t>(childStart); ptr != childEnd; ptr += 0x10) {
+            // Safety: Limit child count to prevent infinite loops if memory is corrupted
+            int safetyLimit = 0;
+            for (uintptr_t ptr = currentPtr; ptr != childEnd && safetyLimit < 5000; ptr += 0x10) {
                 uintptr_t childAddr = Coms->ReadMemory<uintptr_t>(ptr);
-                childList.emplace_back(childAddr);
+                if (childAddr != 0) {
+                    childList.emplace_back(childAddr);
+                }
+                safetyLimit++;
             }
             
             return childList;
         }
 
         RbxInstance FindChild(const std::string& targetName) {
+            if (Addr == 0) return RbxInstance(0);
             auto children = GetChildList();
-
-            
             for (auto& child : children) {
                 if (child.GetName() == targetName) {
                     return child;
-
-
                 }
             }
-            
             return RbxInstance(0);
-
         }
 
         RbxInstance FindChildByClass(const std::string& targetClass) {
+            if (Addr == 0) return RbxInstance(0);
             auto children = GetChildList();
-            
             for (auto& child : children) {
-
                 if (child.GetClass() == targetClass) {
                     return child;
                 }
             }
-            
             return RbxInstance(0);
         }
 
-
-
         RbxInstance WaitChild(const std::string& targetName) {
-            while (true) {
+            if (Addr == 0) return RbxInstance(0);
+            int safety = 0;
+            while (safety < 100) {
                 auto children = GetChildList();
-                
-
                 for (auto& child : children) {
                     if (child.GetName() == targetName) {
                         return child;
                     }
                 }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                safety++;
             }
+            return RbxInstance(0);
         }
 
         uintptr_t GetPrimitivePtr() {
+            if (Addr == 0) return 0;
             return Coms->ReadMemory<uintptr_t>(Addr + offsets::Primitive);
         }
 
-
         Vec3 GetPos() {
             uintptr_t prim = GetPrimitivePtr();
+            if (prim == 0) return { 0, 0, 0 };
             return Coms->ReadMemory<Vec3>(prim + offsets::Position);
-
         }
 
         CFrame GetCFrame() {
             uintptr_t prim = GetPrimitivePtr();
+            if (prim == 0) return CFrame();
             return Coms->ReadMemory<CFrame>(prim + offsets::CFrame);
         }
 
         RbxInstance GetModelRef() {
+            if (Addr == 0) return RbxInstance(0);
             return RbxInstance(Coms->ReadMemory<uintptr_t>(Addr + offsets::ModelInstance));
         }
 
-
         float CalcDistance(const Vec3& targetPos) {
             Vec3 currentPos = GetPos();
-
-            
             float dx = currentPos.X - targetPos.X;
             float dy = currentPos.Y - targetPos.Y;
             float dz = currentPos.Z - targetPos.Z;
-            
             return sqrtf(dx * dx + dy * dy + dz * dz);
         }
     };
@@ -230,6 +237,30 @@ namespace RBX {
         Coms->WriteMemory(humanoid.Addr + 0x1AC, newPower);
     }
 
+    inline void SetCanCollide(RbxInstance model, bool canCollide, int depth = 0) {
+        if (model.Addr == 0 || depth > 10) return;
+        auto children = model.GetChildList();
+        for (auto& child : children) {
+            if (child.Addr == 0) continue;
+            uintptr_t prim = child.GetPrimitivePtr();
+            if (prim != 0) {
+                uint8_t current = Coms->ReadMemory<uint8_t>(child.Addr + offsets::CanCollide);
+                if (canCollide) current |= offsets::CanCollideMask;
+                else current &= ~offsets::CanCollideMask;
+                Coms->WriteMemory<uint8_t>(child.Addr + offsets::CanCollide, current);
+            }
+            SetCanCollide(child, canCollide, depth + 1);
+        }
+    }
 
+    inline bool IsModerator(const std::string& name) {
+        static std::vector<std::string> keywords = { "admin", "mod", "staff", "roblox", "helper" };
+        std::string lowerName = name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        for (auto& kw : keywords) {
+            if (lowerName.find(kw) != std::string::npos) return true;
+        }
+        return false;
+    }
 
 }

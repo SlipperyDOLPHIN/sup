@@ -6,12 +6,20 @@
 #include <windows.h>
 #include <cmath>
 #include <chrono>
+#include <random>
 
 namespace Aimbot {
 
     inline uintptr_t lockedPlayerAddr = 0;
     inline auto lastTriggerTime = std::chrono::high_resolution_clock::now();
     inline auto lastAutoClickTime = std::chrono::high_resolution_clock::now();
+
+    inline int GetRandomInt(int min, int max) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(min, max);
+        return dis(gen);
+    }
 
     inline void MoveMouse(float x, float y) {
         INPUT input = { 0 }; input.type = INPUT_MOUSE; input.mi.dwFlags = MOUSEEVENTF_MOVE;
@@ -31,8 +39,12 @@ namespace Aimbot {
         if (!(GetAsyncKeyState(Vars::AutoClicker::clickKey) & 0x8000)) return;
 
         auto now = std::chrono::high_resolution_clock::now();
-        int cps = Vars::AutoClicker::minCPS + (rand() % (Vars::AutoClicker::maxCPS - Vars::AutoClicker::minCPS + 1));
-        int delay = 1000 / cps;
+        int cps = Vars::AutoClicker::randomizeDelay ? GetRandomInt(Vars::AutoClicker::minCPS, Vars::AutoClicker::maxCPS) : (Vars::AutoClicker::minCPS + Vars::AutoClicker::maxCPS) / 2;
+        int delay = 1000 / (cps > 0 ? cps : 1);
+        
+        if (Vars::AutoClicker::randomizeDelay) {
+            delay += GetRandomInt(-10, 10);
+        }
 
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastAutoClickTime).count() >= delay) {
             MouseClick();
@@ -45,7 +57,12 @@ namespace Aimbot {
         if (!(GetAsyncKeyState(Vars::TriggerBot::triggerKey) & 0x8000)) return;
 
         auto now = std::chrono::high_resolution_clock::now();
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTriggerTime).count() < Vars::TriggerBot::clickDelay) return;
+        int delay = Vars::TriggerBot::clickDelay;
+        if (Vars::TriggerBot::randomizeDelay) {
+            delay += GetRandomInt(-5, 15);
+        }
+
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTriggerTime).count() < delay) return;
 
         POINT mousePos; GetCursorPos(&mousePos);
         RBX::Vec2 aimCenter = { static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) };
