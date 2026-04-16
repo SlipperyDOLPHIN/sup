@@ -198,30 +198,46 @@ public:
 
         ImGuiStyle& style = ImGui::GetStyle();
         style.WindowRounding = 8.0f;
-        style.ChildRounding = 8.0f;
-        style.FrameRounding = 6.0f;
-        style.PopupRounding = 6.0f;
-        style.ScrollbarRounding = 6.0f;
-        style.GrabRounding = 6.0f;
+        style.ChildRounding = 6.0f;
+        style.FrameRounding = 4.0f;
+        style.PopupRounding = 4.0f;
+        style.ScrollbarRounding = 4.0f;
+        style.GrabRounding = 4.0f;
+        style.WindowBorderSize = 1.0f;
+        style.ChildBorderSize = 1.0f;
+        style.FrameBorderSize = 0.0f;
+        style.WindowPadding = ImVec2(12, 12);
+        style.FramePadding = ImVec2(8, 4);
+        style.ItemSpacing = ImVec2(8, 8);
+        style.ItemInnerSpacing = ImVec2(6, 6);
+        style.ScrollbarSize = 12.0f;
 
         ImVec4* colors = style.Colors;
-        colors[ImGuiCol_WindowBg] = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
-        colors[ImGuiCol_ChildBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-        colors[ImGuiCol_Border] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-        colors[ImGuiCol_FrameBg] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
-        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-        colors[ImGuiCol_FrameBgActive] = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
-        colors[ImGuiCol_TitleBg] = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
-        colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
-        colors[ImGuiCol_CheckMark] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
-        colors[ImGuiCol_SliderGrab] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
-        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.50f, 0.70f, 1.00f, 1.00f);
-        colors[ImGuiCol_Button] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
-        colors[ImGuiCol_ButtonHovered] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
-        colors[ImGuiCol_ButtonActive] = ImVec4(0.30f, 0.50f, 0.85f, 1.00f);
-        colors[ImGuiCol_Header] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
-        colors[ImGuiCol_HeaderHovered] = ImVec4(0.40f, 0.60f, 0.95f, 1.00f);
-        colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.50f, 0.85f, 1.00f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.09f, 0.09f, 0.11f, 1.00f);
+        colors[ImGuiCol_ChildBg] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_PopupBg] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+        colors[ImGuiCol_Border] = ImVec4(0.20f, 0.20f, 0.23f, 1.00f);
+        colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.16f, 0.19f, 1.00f);
+        colors[ImGuiCol_FrameBgHovered] = ImVec4(0.20f, 0.20f, 0.24f, 1.00f);
+        colors[ImGuiCol_FrameBgActive] = ImVec4(0.24f, 0.24f, 0.28f, 1.00f);
+        colors[ImGuiCol_TitleBg] = ImVec4(0.09f, 0.09f, 0.11f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.09f, 0.09f, 0.11f, 1.00f);
+        colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.09f, 0.09f, 0.11f, 1.00f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.55f, 0.36f, 0.96f, 1.00f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.55f, 0.36f, 0.96f, 1.00f);
+        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.65f, 0.46f, 1.00f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.16f, 0.16f, 0.19f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.55f, 0.36f, 0.96f, 0.80f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.55f, 0.36f, 0.96f, 1.00f);
+        colors[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.19f, 1.00f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.55f, 0.36f, 0.96f, 0.80f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.55f, 0.36f, 0.96f, 1.00f);
+        colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.20f, 0.23f, 1.00f);
+        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.55f, 0.36f, 0.96f, 0.50f);
+        colors[ImGuiCol_SeparatorActive] = ImVec4(0.55f, 0.36f, 0.96f, 1.00f);
+        colors[ImGuiCol_Text] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+        colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
 
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX11_Init(d3dDevice, d3dContext);
@@ -379,7 +395,7 @@ public:
             return;
         }
 
-        ImGui::SetNextWindowSize(ImVec2(700, 560), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(780, 640), ImGuiCond_FirstUseEver);
         ImGui::Begin("dolphin.club | EX", &Vars::menuOpen, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         ImGui::BeginChild("TabBar", ImVec2(160, 0), true);
@@ -410,40 +426,45 @@ public:
 
         static bool waitAim = false, waitTrig = false, waitClick = false, waitNoclip = false, waitInfJump = false, waitMenu = false, waitPanic = false;
 
+        auto BeginPanel = [](const char* name) {
+            ImGui::BeginChild(name, ImVec2(0, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY);
+            ImGui::TextColored(ImVec4(0.55f, 0.36f, 0.96f, 1.0f), name);
+            ImGui::Separator();
+            ImGui::Spacing();
+            };
+
         if (Vars::selectedTab == 0) {
-            ImGui::Text("Aimbot"); ImGui::Separator(); ImGui::Spacing();
+            ImGui::Columns(2, nullptr, false);
+
+            BeginPanel("Aimbot Settings");
             ImGui::Checkbox("Enable Aimbot", &Vars::Aimbot::enabled);
             ImGui::Checkbox("Team Check", &Vars::Aimbot::teamCheck);
             ImGui::Checkbox("Target NPCs", &Vars::Aimbot::targetNPCs);
             ImGui::Checkbox("Draw Target Line", &Vars::Aimbot::drawTargetLine);
             HotkeyButton("Aimbot Hotkey", &Vars::Aimbot::aimbotKey, waitAim);
+            ImGui::EndChild();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Velocity Prediction");
+            ImGui::Spacing();
+
+            BeginPanel("Smoothing & Method");
+            ImGui::SliderFloat("##Smoothing", &Vars::Aimbot::smoothing, 1.0f, 20.0f, "Smoothing: %.1f");
+            ImGui::Spacing();
+            const char* methods[] = { "Closest to Crosshair", "Closest Distance" };
+            ImGui::Combo("Aim Method", &Vars::Aimbot::aimMethod, methods, 2);
+            const char* targets[] = { "Head", "HumanoidRootPart" };
+            ImGui::Combo("Aim Target", &Vars::Aimbot::aimTarget, targets, 2);
+            ImGui::EndChild();
+
+            ImGui::Spacing();
+
+            BeginPanel("Velocity Prediction");
             ImGui::Checkbox("Enable Prediction", &Vars::Aimbot::prediction);
             if (Vars::Aimbot::prediction) ImGui::SliderFloat("Bullet Speed", &Vars::Aimbot::bulletSpeed, 100.0f, 3000.0f, "%.0f");
+            ImGui::EndChild();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "TriggerBot");
-            ImGui::Checkbox("Enable TriggerBot", &Vars::TriggerBot::enabled);
-            ImGui::SameLine(); ImGui::Checkbox("Randomize##Trig", &Vars::TriggerBot::randomizeDelay);
-            HotkeyButton("Trigger Hotkey", &Vars::TriggerBot::triggerKey, waitTrig);
-            if (Vars::TriggerBot::enabled) {
-                ImGui::SliderFloat("Hitbox Radius", &Vars::TriggerBot::triggerDistance, 5.0f, 50.0f, "%.1f px");
-                ImGui::SliderInt("Click Delay", &Vars::TriggerBot::clickDelay, 10, 500, "%d ms");
-            }
+            ImGui::NextColumn();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Auto-Clicker");
-            ImGui::Checkbox("Enable AutoClicker", &Vars::AutoClicker::enabled);
-            ImGui::SameLine(); ImGui::Checkbox("Randomize##Click", &Vars::AutoClicker::randomizeDelay);
-            HotkeyButton("Clicker Hotkey", &Vars::AutoClicker::clickKey, waitClick);
-            if (Vars::AutoClicker::enabled) {
-                ImGui::SliderInt("Min CPS", &Vars::AutoClicker::minCPS, 1, 30);
-                ImGui::SliderInt("Max CPS", &Vars::AutoClicker::maxCPS, 1, 30);
-            }
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+            BeginPanel("Field of View");
             ImGui::Checkbox("Show FOV", &Vars::Aimbot::showFOV);
             ImGui::SameLine(); ImGui::Checkbox("Dynamic Size", &Vars::Aimbot::dynamicFOV);
             if (Vars::Aimbot::showFOV) {
@@ -451,179 +472,212 @@ public:
                 ImGui::SliderFloat("Thickness", &Vars::Aimbot::fovThickness, 1.0f, 5.0f, "%.1f");
                 ImGui::SliderFloat("Radius", &Vars::Aimbot::fovRadius, 10.0f, 500.0f, "%.0f");
             }
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::Text("Smoothing");
-            ImGui::SliderFloat("##Smoothing", &Vars::Aimbot::smoothing, 1.0f, 20.0f, "%.1f");
+            ImGui::EndChild();
 
             ImGui::Spacing();
-            ImGui::Text("Aim Method (Priority)");
-            const char* methods[] = { "Closest to Crosshair", "Closest Distance" };
-            ImGui::Combo("##AimMethod", &Vars::Aimbot::aimMethod, methods, 2);
+
+            BeginPanel("TriggerBot");
+            ImGui::Checkbox("Enable TriggerBot", &Vars::TriggerBot::enabled);
+            ImGui::SameLine(); ImGui::Checkbox("Randomize", &Vars::TriggerBot::randomizeDelay);
+            HotkeyButton("Trigger Hotkey", &Vars::TriggerBot::triggerKey, waitTrig);
+            if (Vars::TriggerBot::enabled) {
+                ImGui::SliderFloat("Hitbox", &Vars::TriggerBot::triggerDistance, 5.0f, 50.0f, "%.1f px");
+                ImGui::SliderInt("Delay", &Vars::TriggerBot::clickDelay, 10, 500, "%d ms");
+            }
+            ImGui::EndChild();
 
             ImGui::Spacing();
-            ImGui::Text("Aim Target");
-            const char* targets[] = { "Head", "HumanoidRootPart" };
-            ImGui::Combo("##Target", &Vars::Aimbot::aimTarget, targets, 2);
+
+            BeginPanel("Auto-Clicker");
+            ImGui::Checkbox("Enable AutoClicker", &Vars::AutoClicker::enabled);
+            ImGui::SameLine(); ImGui::Checkbox("Random", &Vars::AutoClicker::randomizeDelay);
+            HotkeyButton("Clicker Hotkey", &Vars::AutoClicker::clickKey, waitClick);
+            if (Vars::AutoClicker::enabled) {
+                ImGui::SliderInt("Min CPS", &Vars::AutoClicker::minCPS, 1, 30);
+                ImGui::SliderInt("Max CPS", &Vars::AutoClicker::maxCPS, 1, 30);
+            }
+            ImGui::EndChild();
+
+            ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 1) {
-            ImGui::Text("Visuals"); ImGui::Separator(); ImGui::Spacing();
-            ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
-            ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
-            ImGui::Checkbox("Show NPCs/Bots", &Vars::ESP::showNPCs);
-            ImGui::Checkbox("Health Coloring", &Vars::ESP::healthColoring);
-            ImGui::Text("Max Render Distance");
-            ImGui::SliderFloat("##MaxDist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Loot & Items");
-            ImGui::Checkbox("Enable Item ESP", &Vars::ESP::items);
-            if (Vars::ESP::items) {
-                ImGui::SliderFloat("Max Dist", &Vars::ESP::maxItemDistance, 10.0f, 1000.0f, "%.0f");
-                ImGui::ColorEdit4("Color", Vars::ESP::itemColor, ImGuiColorEditFlags_NoInputs);
-            }
-
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-
             ImGui::Columns(2, nullptr, false);
 
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Targeting Extras");
-            ImGui::Checkbox("Target Highlight", &Vars::ESP::highlightTarget);
-            if (Vars::ESP::highlightTarget) ImGui::ColorEdit4("Target Color", Vars::ESP::targetHighlightColor, ImGuiColorEditFlags_NoInputs);
+            BeginPanel("General ESP");
+            ImGui::Checkbox("Enable ESP", &Vars::ESP::enabled);
+            ImGui::Checkbox("Team Check", &Vars::ESP::teamCheck);
+            ImGui::Checkbox("Show NPCs", &Vars::ESP::showNPCs);
+            ImGui::Checkbox("Health Coloring", &Vars::ESP::healthColoring);
+            ImGui::SliderFloat("Max Dist", &Vars::ESP::maxDistance, 50.0f, 5000.0f, "%.0f studs");
+            ImGui::EndChild();
 
-            ImGui::Checkbox("View Tracers", &Vars::ESP::viewAngles);
-            if (Vars::ESP::viewAngles) ImGui::ColorEdit4("Tracer Color", Vars::ESP::viewAngleColor, ImGuiColorEditFlags_NoInputs);
+            ImGui::Spacing();
 
-            ImGui::Checkbox("Off-Screen Arrows (WIP)", &Vars::ESP::offScreenArrows);
-            if (Vars::ESP::offScreenArrows) {
-                ImGui::SliderFloat("Arrow Rad", &Vars::ESP::arrowRadius, 50.0f, 400.0f, "%.0f");
-                ImGui::ColorEdit4("Arrow Color", Vars::ESP::arrowColor, ImGuiColorEditFlags_NoInputs);
-            }
-
-            ImGui::Spacing(); ImGui::Spacing();
-
+            BeginPanel("Elements");
             ImGui::Checkbox("Boxes", &Vars::ESP::boxes);
             if (Vars::ESP::boxes) {
                 const char* boxStyles[] = { "Full Box", "Corner Box" };
-                ImGui::Combo("##BoxStyle", &Vars::ESP::boxStyle, boxStyles, 2);
-                ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
+                ImGui::Combo("Style", &Vars::ESP::boxStyle, boxStyles, 2);
                 ImGui::Checkbox("Box Fill", &Vars::ESP::boxFill);
-                if (Vars::ESP::boxFill) ImGui::ColorEdit4("Fill Color", Vars::ESP::boxFillColor, ImGuiColorEditFlags_NoInputs);
             }
             ImGui::Spacing();
-
             ImGui::Checkbox("Skeleton", &Vars::ESP::skeleton);
-            if (Vars::ESP::skeleton) {
-                ImGui::SliderFloat("Skel Thick", &Vars::ESP::skeletonThickness, 1.0f, 5.0f, "%.1f");
-                ImGui::ColorEdit4("Bone Color", Vars::ESP::skeletonColor, ImGuiColorEditFlags_NoInputs);
-            }
-            ImGui::Spacing();
-
-            ImGui::Checkbox("Head Dot", &Vars::ESP::headDot);
-            if (Vars::ESP::headDot) {
-                ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 2.0f, 15.0f, "%.1f");
-                ImGui::ColorEdit4("Dot Color", Vars::ESP::headDotColor, ImGuiColorEditFlags_NoInputs);
-            }
-
-            ImGui::NextColumn();
-
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "World Map UI");
-            ImGui::Checkbox("2D Radar", &Vars::Radar::enabled);
-            if (Vars::Radar::enabled) {
-                ImGui::SliderFloat("Radar Range", &Vars::Radar::range, 50.0f, 1000.0f, "%.0f");
-                ImGui::SliderFloat("Radar Size", &Vars::Radar::size, 100.0f, 400.0f, "%.0f");
-                ImGui::ColorEdit4("Blip Color", Vars::Radar::color, ImGuiColorEditFlags_NoInputs);
-            }
-
-            ImGui::Spacing(); ImGui::Spacing();
-
-            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
-            if (Vars::ESP::snaplines) {
-                const char* linePos[] = { "Bottom", "Center", "Top" };
-                ImGui::Combo("##LinePos", &Vars::ESP::snaplinePos, linePos, 3);
-                ImGui::ColorEdit4("Line Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
-            }
+            if (Vars::ESP::skeleton) ImGui::SliderFloat("Skel Thick", &Vars::ESP::skeletonThickness, 1.0f, 5.0f, "%.1f");
             ImGui::Spacing();
             ImGui::Checkbox("Names", &Vars::ESP::names);
             ImGui::Checkbox("Distance", &Vars::ESP::distance);
             ImGui::Checkbox("Weapon", &Vars::ESP::weapon);
-
             ImGui::Checkbox("Health Bar", &Vars::ESP::healthBar);
-            if (Vars::ESP::healthBar) {
-                ImGui::Checkbox("Show HP Text", &Vars::ESP::healthText);
-            }
-            ImGui::Checkbox("Text BG", &Vars::ESP::textBackground);
+            if (Vars::ESP::healthBar) { ImGui::SameLine(); ImGui::Checkbox("HP Text", &Vars::ESP::healthText); }
+            ImGui::EndChild();
+
             ImGui::Spacing();
 
+            BeginPanel("Crosshair");
             ImGui::Checkbox("Crosshair", &Vars::ESP::crosshair);
             if (Vars::ESP::crosshair) {
-                ImGui::SliderFloat("CH Size", &Vars::ESP::crosshairSize, 2.0f, 30.0f, "%.0f");
-                ImGui::SliderFloat("CH Thick", &Vars::ESP::crosshairThickness, 1.0f, 5.0f, "%.1f");
-                ImGui::ColorEdit4("CH Color", Vars::ESP::crosshairColor, ImGuiColorEditFlags_NoInputs);
+                ImGui::SliderFloat("Size", &Vars::ESP::crosshairSize, 2.0f, 30.0f, "%.0f");
+                ImGui::SliderFloat("Thick", &Vars::ESP::crosshairThickness, 1.0f, 5.0f, "%.1f");
+                ImGui::ColorEdit4("Color##CH", Vars::ESP::crosshairColor, ImGuiColorEditFlags_NoInputs);
             }
+            ImGui::EndChild();
+
+            ImGui::NextColumn();
+
+            BeginPanel("Target Extras");
+            ImGui::Checkbox("Head Dot", &Vars::ESP::headDot);
+            if (Vars::ESP::headDot) ImGui::SliderFloat("Dot Size", &Vars::ESP::headDotSize, 2.0f, 15.0f, "%.1f");
+
+            ImGui::Checkbox("Snaplines", &Vars::ESP::snaplines);
+            if (Vars::ESP::snaplines) {
+                const char* linePos[] = { "Bottom", "Center", "Top" };
+                ImGui::Combo("Position", &Vars::ESP::snaplinePos, linePos, 3);
+            }
+
+            ImGui::Checkbox("Target Highlight", &Vars::ESP::highlightTarget);
+            ImGui::Checkbox("View Tracers", &Vars::ESP::viewAngles);
+            ImGui::Checkbox("Off-Screen Arrows", &Vars::ESP::offScreenArrows);
+            if (Vars::ESP::offScreenArrows) ImGui::SliderFloat("Arrow Rad", &Vars::ESP::arrowRadius, 50.0f, 400.0f, "%.0f");
+            ImGui::EndChild();
+
+            ImGui::Spacing();
+
+            BeginPanel("Environment");
+            ImGui::Checkbox("Item ESP", &Vars::ESP::items);
+            if (Vars::ESP::items) {
+                ImGui::SliderFloat("Item Dist", &Vars::ESP::maxItemDistance, 10.0f, 1000.0f, "%.0f");
+                ImGui::ColorEdit4("Item Color", Vars::ESP::itemColor, ImGuiColorEditFlags_NoInputs);
+            }
+            ImGui::Spacing();
+            ImGui::Checkbox("2D Radar", &Vars::Radar::enabled);
+            if (Vars::Radar::enabled) {
+                ImGui::SliderFloat("Radar Range", &Vars::Radar::range, 50.0f, 1000.0f, "%.0f");
+                ImGui::SliderFloat("Radar Size", &Vars::Radar::size, 100.0f, 400.0f, "%.0f");
+            }
+            ImGui::EndChild();
+
+            ImGui::Spacing();
+
+            BeginPanel("Colors");
+            ImGui::Checkbox("Text Background", &Vars::ESP::textBackground);
+            ImGui::Spacing();
+            ImGui::ColorEdit4("Box Color", Vars::ESP::boxColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::boxFill) ImGui::ColorEdit4("Fill Color", Vars::ESP::boxFillColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::skeleton) ImGui::ColorEdit4("Skeleton Color", Vars::ESP::skeletonColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::headDot) ImGui::ColorEdit4("Head Dot Color", Vars::ESP::headDotColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::snaplines) ImGui::ColorEdit4("Snapline Color", Vars::ESP::snaplineColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::highlightTarget) ImGui::ColorEdit4("Target Color", Vars::ESP::targetHighlightColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::viewAngles) ImGui::ColorEdit4("Tracer Color", Vars::ESP::viewAngleColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::ESP::offScreenArrows) ImGui::ColorEdit4("Arrow Color", Vars::ESP::arrowColor, ImGuiColorEditFlags_NoInputs);
+            if (Vars::Radar::enabled) ImGui::ColorEdit4("Radar Blip Color", Vars::Radar::color, ImGuiColorEditFlags_NoInputs);
+            ImGui::EndChild();
 
             ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 2) {
-            ImGui::Text("Local Player"); ImGui::Separator(); ImGui::Spacing();
-            ImGui::Checkbox("WalkSpeed", &Vars::Local::speedEnabled);
-            ImGui::SliderFloat("##WalkSpeed", &Vars::Local::walkSpeed, 16.0f, 200.0f, "%.0f");
+            ImGui::Columns(2, nullptr, false);
 
+            BeginPanel("Movement");
+            ImGui::Checkbox("WalkSpeed", &Vars::Local::speedEnabled);
+            ImGui::SliderFloat("##WalkSpeed", &Vars::Local::walkSpeed, 16.0f, 200.0f, "Speed: %.0f");
             ImGui::Spacing();
             ImGui::Checkbox("JumpPower", &Vars::Local::jumpEnabled);
-            ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "%.0f");
+            ImGui::SliderFloat("##JumpPower", &Vars::Local::jumpPower, 50.0f, 200.0f, "Power: %.0f");
+            ImGui::EndChild();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Movement Hacks");
+            ImGui::Spacing();
+
+            BeginPanel("Camera");
+            ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
+            ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "FOV: %.0f");
+            ImGui::EndChild();
+
+            ImGui::NextColumn();
+
+            BeginPanel("Exploits");
             ImGui::Checkbox("Noclip", &Vars::Local::noclipEnabled);
             ImGui::Checkbox("Infinite Jump", &Vars::Local::infiniteJumpEnabled);
+            ImGui::EndChild();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::Text("Camera");
-            ImGui::Checkbox("Custom FOV", &Vars::Local::fovChangerEnabled);
-            ImGui::SliderFloat("##CamFOV", &Vars::Local::cameraFOV, 20.0f, 120.0f, "%.0f");
+            ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 3) {
-            ImGui::Text("Miscellaneous"); ImGui::Separator(); ImGui::Spacing();
+            ImGui::Columns(2, nullptr, false);
+
+            BeginPanel("Security");
             ImGui::Checkbox("Stream Proof (OBS Bypass)", &Vars::Misc::streamProof);
             ImGui::Checkbox("Spectator Warning", &Vars::Misc::spectatorWarning);
             ImGui::Checkbox("Anti-Mod / Staff Detect", &Vars::Misc::antiMod);
+            ImGui::EndChild();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "UI Customization");
-            ImGui::Checkbox("Use Custom Font", &Vars::Misc::useCustomFont);
-            if (Vars::Misc::useCustomFont) {
-                ImGui::InputText("Font Path", Vars::Misc::customFontPath, MAX_PATH);
-                ImGui::SliderFloat("Font Size", &Vars::Misc::fontSize, 8.0f, 24.0f, "%.1f");
-                if (ImGui::Button("Reload Font")) {
-                    Notify::Add("Font reload requires restart", ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
-                }
-            }
+            ImGui::Spacing();
 
-            ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Global Hotkeys");
+            BeginPanel("Global Hotkeys");
             HotkeyButton("Menu Toggle", &Vars::Misc::Hotkeys::menuKey, waitMenu);
             HotkeyButton("Panic Key", &Vars::Misc::Hotkeys::panicKey, waitPanic);
             HotkeyButton("Noclip Key", &Vars::Misc::Hotkeys::noclipKey, waitNoclip);
             HotkeyButton("Inf Jump Key", &Vars::Misc::Hotkeys::infiniteJumpKey, waitInfJump);
+            ImGui::EndChild();
+
+            ImGui::NextColumn();
+
+            BeginPanel("UI Customization");
+            ImGui::Checkbox("Use Custom Font", &Vars::Misc::useCustomFont);
+            if (Vars::Misc::useCustomFont) {
+                ImGui::InputText("Font Path", Vars::Misc::customFontPath, MAX_PATH);
+                ImGui::SliderFloat("Font Size", &Vars::Misc::fontSize, 8.0f, 24.0f, "%.1f");
+                if (ImGui::Button("Reload Font", ImVec2(-1, 25))) {
+                    Notify::Add("Font reload requires restart", ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+                }
+            }
+            ImGui::EndChild();
+
+            ImGui::Columns(1);
         }
         else if (Vars::selectedTab == 4) {
-            ImGui::Text("Settings & Multi-Config"); ImGui::Separator(); ImGui::Spacing();
-            // ... (rest of settings tab)
-            if (ImGui::Button("Refresh Config List", ImVec2(180, 25))) { Config::RefreshConfigs(); Notify::Add("Configs Refreshed", ImVec4(0.4f, 0.8f, 1.0f, 1.0f)); }
-            
+            BeginPanel("Configuration Manager");
+            if (ImGui::Button("Refresh Config List", ImVec2(180, 25))) { Config::RefreshConfigs(); Notify::Add("Configs Refreshed"); }
+
             if (Vars::Configs::list.empty()) Config::RefreshConfigs();
             std::vector<const char*> configNames;
             for (auto& s : Vars::Configs::list) configNames.push_back(s.c_str());
             ImGui::Combo("##ConfigList", &Vars::Configs::selectedIndex, configNames.data(), static_cast<int>(configNames.size()));
 
-            if (ImGui::Button("Load Selected", ImVec2(100, 30))) { Config::Load(); Notify::Add("Config Loaded!", ImVec4(1.0f, 0.8f, 0.2f, 1.0f)); }
+            ImGui::Spacing();
+            if (ImGui::Button("Load Selected", ImVec2(140, 30))) { Config::Load(); Notify::Add("Config Loaded!"); }
             ImGui::SameLine();
-            if (ImGui::Button("Save Selected", ImVec2(100, 30))) { Config::Save(); Notify::Add("Config Overwritten!", ImVec4(0.4f, 1.0f, 0.4f, 1.0f)); }
-            
+            if (ImGui::Button("Save Selected", ImVec2(140, 30))) { Config::Save(); Notify::Add("Config Overwritten!"); }
+            ImGui::EndChild();
+
+            ImGui::Spacing();
+
+            BeginPanel("System");
+            ImGui::Text("Build: Premium UI Polish");
+            ImGui::Text("Status: Undetected");
             ImGui::Spacing();
             if (ImGui::Button("Force Refresh Cache", ImVec2(180, 30))) { Vars::Misc::forceRefresh = true; }
             if (ImGui::Button("Panic / Exit Cheat", ImVec2(180, 30))) { Vars::Misc::exitCheat = true; }
+            ImGui::EndChild();
         }
 
         ImGui::EndChild();
